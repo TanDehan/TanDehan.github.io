@@ -1,82 +1,166 @@
 <!DOCTYPE html>
-<html>
-
-<style>
-        div.Part1and2 {
-            width: 100%;
-            overflow: auto;
-            text-align: center;
-        }
-        div.Part1and2 div {
-            width:50%;  
-            float:left;
-        }
-        
-        div.Part3 {
-            width: 100%;
-            overflow: auto;
-            text-align: center;
-        }
-</style>
-
+<html lang="en">
 <head>
-    <link rel="stylesheet" href="../styles.css">
-    <title >Project 0: Becoming Friends with Your Camera</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project 0: Becoming Friends with Your Camera</title>
+<link rel="stylesheet" href="../styles.css">
 </head>
 <body>
-    <h1 style="text-align: center;">Project 0: Becoming Friends with Your Camera</h1>
+
+<div class="page-frame">
+  <div class="board">
+
+    <a class="back-link" href="../index.html">&larr; CS180 portfolio</a>
+
+    <header class="hero">
+      <h1>Project 0: Becoming Friends with Your Camera</h1>
+    </header>
+
+    <!------------------------------------ PART 1 ------------------------------------>
+    <section class="part" id="part1">
+      <div class="part-head">
+        <h2>Part 1: Selfie: The Wrong Way vs. The Right Way</h2>
+        <p>When taken close up, the facial features are closer to the camera, hence making them look larger. At the same time, 
+            features that are further from the camera, such as the ears, shrinks and disappears. 
+            <br><br>
+            When taken from further back and zoomed in, the relative distance between features like the nose and ears becomes 
+            negligible compared to the distance between the camera. This makes the camera see the facial features in their natural 
+            proportions, making it look much better than the first one.
+        </p>
+      </div>
+
+      <div class="pair">
+        <figure>
+          <div class="frame">
+            <img src="./media/Part1_CloseUp.jpg" alt="Part1_CloseUp">
+          </div>
+          <figcaption>Close Up</figcaption>
+        </figure>
+
+        <figure>
+          <div class="frame">
+            <img src="./media/Part1_Zoomed.jpg" alt="Part1_Zoomed">
+          </div>
+          <figcaption>Zoomed In</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!------------------------------------ PART 2 ------------------------------------>
+    <section class="part" id="part2">
+      <div class="part-head">
+        <h2>Part 2: Architectural Perspective Compression</h2>
+        <p>When standing further away and zooming in, the relative distance between the camera, the landscape, and the building changes. 
+            The distance between the landscape and building becomes negligible. This compresses the depth and makes the 
+            objects in the background look bigger and closer to the foreground, flattening the image.
+            <br><br>
+            When close up, the camera is now closer to the foreground than the background. This changes the perspective, making 
+            the foreground elements appear larger and the building seems to be stretching away from the camera.
+            
+        </p>
+      </div>
+
+      <div class="pair">
+        <figure>
+          <div class="frame">
+            <img src="./media/Part2_Zoomed.jpg" alt="Part2_Zoomed">
+          </div>
+          <figcaption>Zoomed In</figcaption>
+        </figure>
+
+        <figure>
+          <div class="frame">
+            <img src="./media/Part2_CloseUp.jpg" alt="Part2_CloseUp">
+          </div>
+          <figcaption>Close Up</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!------------------------------------ PART 3 ------------------------------------>
+    <section class="part" id="part3">
+      <div class="part-head">
+        <h2>Part 3: The Dolly Zoom</h2>
+      </div>
+
+      <div class="filmstrip-wrap">
+        <div class="filmframe">
+          <img src="./media/Part3_DollyZoom.gif" alt="Part3_DollyZoom">
+        </div>
+      </div>
+      <span class="part3-caption">Dolly Zoom</span>
     
-    <!-- ================================= PART 1 ================================= -->
-    <div>
-        <div>
-            <h2 style="text-align: center;">Part 1: Selfie: The Wrong Way vs. The Right Way</h2>
-        </div>
+      <div class="nineSet">
+        <figure>
+          <div class="frame">
+            <img src="./media/1.jpg" alt="Dolly 1">
+            <figcaption>1</figcaption>
+          </div>
+        </figure>
 
-        <div class="Part1and2">        
-            <div>
-                <img src="./media/Part1_CloseUp.jpg" alt="Part1_CloseUp" style="width:250px;height:350px;">
-                <p style="font-size: large;">Close Up Image</p>
-            </div>    
- 
-            <div>    
-                <img src="./media/Part1_Zoomed.jpg" alt="Part1_Zoomed" style="width:250px;height:350px;">
-                <p style="font-size: large;">Zoomed In Image</p>
-            </div>
-        </div>
-    </div>
+        <figure>
+          <div class="frame">
+            <img src="./media/2.jpg" alt="Dolly 2">
+            <figcaption>2</figcaption>
+          </div>
+        </figure>
 
-    <!-- ================================= PART 2 ================================= -->
-    <div>
-        <div>
-            <h2 style="text-align: center;">Part 2: Architectural Perspective Compression</h2>
-        </div>
+        <figure>
+          <div class="frame">
+            <img src="./media/3.jpg" alt="Dolly 3">
+            <figcaption>3</figcaption>
+          </div>
+        </figure>
 
-        <div class="Part1and2">        
-            <div>
-                <img src="./media/Part2_Zoomed.jpg" alt="Part2_Zoomed" style="width:250px;height:350px;">
-                <p style="font-size: large;">Zoomed In Image</p>
-            </div>    
- 
-            <div>    
-                <img src="./media/Part2_CloseUp.jpg" alt="Part2_CloseUp" style="width:250px;height:350px;">
-                <p style="font-size: large;">Close Up Image</p>
-            </div>
-        </div>
-    </div>
+        <figure>
+          <div class="frame">
+            <img src="./media/4.jpg" alt="Dolly 4">
+            <figcaption>4</figcaption>
+          </div>
+        </figure>
 
-    <!-- ================================= PART 3 ================================= -->
-    <div>
-        <div>
-            <h2 style="text-align: center;">Part 3: The Dolly Zoom</h2>
-        </div>
+        <figure>
+          <div class="frame">
+            <img src="./media/5.jpg" alt="Dolly 5">
+            <figcaption>5</figcaption>
+          </div>
+        </figure>
 
-        <div class="Part3">        
-            <div>
-                <img src="./media/Part3_DollyZoom.gif" alt="Part3_DollyZoom">
-                <p style="font-size: large;">Dolly Zoom Gif</p>
-            </div>    
-        </div>
-    </div>
+        <figure>
+          <div class="frame">
+            <img src="./media/6.jpg" alt="Dolly 6">
+            <figcaption>6</figcaption>
+          </div>
+        </figure>
+
+        <figure>
+          <div class="frame">
+            <img src="./media/7.jpg" alt="Dolly 7">
+            <figcaption>7</figcaption>
+          </div>
+        </figure>
+
+        <figure>
+          <div class="frame">
+            <img src="./media/8.jpg" alt="Dolly 8">
+            <figcaption>8</figcaption>
+          </div>
+        </figure>
+
+        <figure>
+          <div class="frame">
+            <img src="./media/9.jpg" alt="Dolly 9">
+            <figcaption>9</figcaption>
+          </div>
+        </figure>
+
+      </div>
+
+    </section>
+
+  </div>
+</div>
 
 </body>
 </html>

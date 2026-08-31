@@ -1,21 +1,312 @@
-head {
-    font-family: Arial, sans-serif;
-    margin: 20px;
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap');
+
+:root{
+  --paper: #EAE5D8;
+  --paper-dim: #DED8C6;
+  --ink: #211F1A;
+  --ink-soft: #5B564C;
+  --line: #C7BEA6;
+  --safelight: #C1352B;
+  --safelight-deep: #8C2019;
 }
-body {
-    background-color: gray;
-    text-align: center;
+
+*{ box-sizing: border-box; }
+
+body{
+  margin: 0;
+  background-color: var(--paper);
+  background-image: radial-gradient(rgba(0,0,0,0.035) 1px, transparent 1px);
+  background-size: 3px 3px;
+  color: var(--ink);
+  font-family: 'Inter', sans-serif;
+  line-height: 1.6;
 }
-h1 {
-    color: black;
+
+.page-frame{
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 20px;
 }
-h2 {
-    text-align: center;
+
+.board{
+  position: relative;
+  padding: 56px 64px 72px;
+  border: 1px solid var(--line);
 }
-p {
-    color: black;
-    font-family: 'Times New Roman', Times, serif;
+
+.board::before{
+  content: "";
+  position: absolute;
+  inset: 10px;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--safelight), var(--safelight)) top left / 30px 2px no-repeat,
+    linear-gradient(var(--safelight), var(--safelight)) top left / 2px 30px no-repeat,
+    linear-gradient(var(--safelight), var(--safelight)) top right / 30px 2px no-repeat,
+    linear-gradient(var(--safelight), var(--safelight)) top right / 2px 30px no-repeat,
+    linear-gradient(var(--safelight), var(--safelight)) bottom left / 30px 2px no-repeat,
+    linear-gradient(var(--safelight), var(--safelight)) bottom left / 2px 30px no-repeat,
+    linear-gradient(var(--safelight), var(--safelight)) bottom right / 30px 2px no-repeat,
+    linear-gradient(var(--safelight), var(--safelight)) bottom right / 2px 30px no-repeat;
 }
-.button {
-    color: green;
+
+@media (max-width: 640px){
+  .board{ padding: 40px 22px 56px; }
+  .board::before{ inset: 6px; }
+}
+
+.back-link{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  text-decoration: none;
+  margin-bottom: 32px;
+}
+.back-link:hover,
+.back-link:focus-visible{ color: var(--safelight-deep); }
+
+.hero{
+  text-align: left;
+  max-width: 640px;
+  margin: 0 0 8px;
+  animation: rise 0.7s ease-out both;
+}
+
+.hero h1{
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: clamp(2.1rem, 4.5vw, 3.1rem);
+  line-height: 1.08;
+  margin: 0 0 18px;
+  letter-spacing: -0.01em;
+}
+
+.hero p{
+  font-size: 1.05rem;
+  color: var(--ink-soft);
+  margin: 0;
+  max-width: 54ch;
+}
+
+@keyframes rise{
+  from{ opacity: 0; transform: translateY(10px); }
+  to{ opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce){
+  .hero{ animation: none; }
+}
+
+.index-list{
+  list-style: none;
+  margin: 40px 0 0;
+  padding: 0;
+}
+
+.index-item{
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 28px;
+  padding: 20px 4px;
+  border-top: 1px solid var(--line);
+  text-decoration: none;
+  color: var(--ink);
+  transition: padding-left 0.2s ease, color 0.2s ease;
+}
+
+.index-list li:last-child .index-item{
+  border-bottom: 1px solid var(--line);
+}
+
+.index-item::before{
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--safelight);
+  transform: scaleY(0);
+  transition: transform 0.2s ease;
+}
+
+.index-item:hover,
+.index-item:focus-visible{
+  padding-left: 18px;
+  color: var(--safelight-deep);
+}
+
+.index-item:hover::before,
+.index-item:focus-visible::before{
+  transform: scaleY(1);
+}
+
+.index-tag{
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85rem;
+  color: var(--safelight);
+  min-width: 32px;
+  flex-shrink: 0;
+}
+
+.index-title{
+  font-size: 1.05rem;
+  line-height: 1.4;
+}
+
+.part{
+  padding: 64px 0 8px;
+  border-top: 1px solid var(--line);
+  margin-top: 56px;
+}
+
+.part-head{
+  max-width: 700px;
+  margin: 0 0 40px;
+}
+
+.part-head h2{
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: clamp(1.4rem, 2.6vw, 1.8rem);
+  margin: 0 0 10px;
+}
+
+.part-head p{
+  color: var(--ink-soft);
+  margin: 0;
+  font-size: 0.98rem;
+  max-width: 100ch;
+}
+
+/* ---------- image pairs / grids ----------
+   <div class="pair"> two <figure> children </div>
+*/
+.pair{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  justify-items: center;
+  align-items: start;
+}
+
+/* For Proj 0 Part 3 only */
+.nineSet{ 
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+  gap: 5px;
+  justify-items: center;
+  align-items: start;
+}
+
+@media (max-width: 640px){
+  .pair{ grid-template-columns: 1fr; gap: 48px; }
+}
+
+figure{
+  margin: 0;
+  text-align: center;
+}
+
+*/
+.frame{
+  position: relative;
+  display: inline-block;
+  padding: 18px;
+  transition: padding 0.25s ease;
+}
+
+.frame::before{
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--safelight), var(--safelight)) top left / 22px 2px no-repeat,
+    linear-gradient(var(--safelight), var(--safelight)) top left / 2px 22px no-repeat,
+    linear-gradient(var(--safelight), var(--safelight)) top right / 22px 2px no-repeat,
+    linear-gradient(var(--safelight), var(--safelight)) top right / 2px 22px no-repeat,
+    linear-gradient(var(--safelight), var(--safelight)) bottom left / 22px 2px no-repeat,
+    linear-gradient(var(--safelight), var(--safelight)) bottom left / 2px 22px no-repeat,
+    linear-gradient(var(--safelight), var(--safelight)) bottom right / 22px 2px no-repeat,
+    linear-gradient(var(--safelight), var(--safelight)) bottom right / 2px 22px no-repeat;
+  opacity: 0.65;
+  transition: opacity 0.25s ease;
+}
+
+.frame img{
+  display: block;
+  width: 100%;
+  max-width: 240px;
+  height: auto;
+  aspect-ratio: 5 / 7;
+  object-fit: cover;
+  background: var(--paper-dim);
+}
+
+figcaption{
+  margin-top: 14px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+}
+
+.filmstrip-wrap{
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 24px;
+}
+
+.filmframe{
+  position: relative;
+  display: inline-block;
+  padding: 14px 30px;
+  background: var(--ink);
+}
+
+.filmframe::before,
+.filmframe::after{
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 20px;
+  background-image: radial-gradient(circle, var(--paper) 4px, transparent 4.5px);
+  background-size: 20px 28px;
+  background-repeat: repeat-y;
+  background-position: center;
+}
+
+.filmframe::before{ left: 0; }
+.filmframe::after{ right: 0; }
+
+.filmframe img{
+  display: block;
+  width: 260px;
+  max-width: 62vw;
+  height: auto;
+  aspect-ratio: 5 / 7;
+  object-fit: cover;
+}
+
+.part3-caption{
+  display: block;
+  text-align: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  letter-spacing: 0.02em;
+}
+
+footer{
+  margin-top: 64px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  text-align: left;
 }
