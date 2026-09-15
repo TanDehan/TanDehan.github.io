@@ -3,8 +3,50 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Project 0: Becoming Friends with Your Camera</title>
+<title>Project 1: Colorizing the Prokudin-Gorskii Photo Collection</title>
 <link rel="stylesheet" href="../styles.css">
+<style>
+  /* Basic table and gallery styling to ensure clean formatting */
+  .results-table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    margin: 30px 0; 
+    font-size: 0.9rem;
+  }
+  .results-table th, .results-table td { 
+    border: 1px solid var(--line); 
+    padding: 12px; 
+    text-align: center; 
+  }
+  .results-table th { 
+    background-color: var(--paper-dim); 
+    font-family: 'IBM Plex Mono', monospace; 
+    font-weight: 500;
+  }
+  .gallery { 
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 20px; 
+    justify-content: center; 
+    margin-bottom: 30px; 
+  }
+  .gallery-item { 
+    text-align: center; 
+    max-width: 30%; 
+  }
+  .gallery-item img { 
+    max-width: 100%; 
+    height: auto; 
+    border: 1px solid #ccc; 
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.1); 
+  }
+  .comparison { 
+    display: flex; 
+    gap: 20px; 
+    justify-content: center; 
+    margin-top: 20px; 
+  }
+</style>
 </head>
 <body>
 
@@ -14,18 +56,208 @@
     <a class="back-link" href="../index.html">&larr; CS180 portfolio</a>
 
     <header class="hero">
-      <h1>Project 1: Images of the Russian Empire -- Colorizing the Prokudin-Gorskii Photo Collection</h1>
+      <h1>Project 1: Images of the Russian Empire</h1>
+      <h2>Colorizing the Prokudin-Gorskii Photo Collection</h2>
     </header>
 
-    <!------------------------------------ PART 1 ------------------------------------>
-    <section class="part" id="part1">
+    <!------------------------------------ ALGORITHM OVERVIEW ------------------------------------>
+    <section class="part" id="overview">
       <div class="part-head">
-        <h2>Its not done :[</h2>
-        <figure>
-          <div class="frame">
-            <img src="../PlaceHolderImage/sad cat.png" alt="Sad Cat">
-          </div>
-        </figure>
+        <h2>Algorithm Overview</h2>
+        <p>
+          The goal of this project is to take digitized glass plate images containing three distinct color channel exposures (Blue, Green, Red) and align them to form a single RGB color image. 
+        </p>
+        <br>
+        <p>
+          <strong>Single-Scale Alignment:</strong> For smaller, low-resolution images, I implemented an exhaustive search over a [-15, 15] pixel window. 
+        </p>
+        <br>
+        <p>
+          To score the alignment, I used the <strong>Normalized Cross-Correlation (NCC)</strong> metric. By cropping the borders before computing the NCC score, the algorithm avoids matching the white/black borders and focuses on the structural interior of the image.
+        </p>
+        <br>
+        <p>
+          <strong>Multi-Scale Pyramid Alignment:</strong> Exhaustive search becomes too slow for high-resolution <code>.tif</code> files. To handle this, I built a coarse-to-fine image pyramid. The algorithm recursively scales the image down by a factor of 2 until the width/height is below 400 pixels. It calculates a coarse alignment shift, scales that shift by 2 as it travels back up the pyramid, and performs a small localized search (window of [-2, 2]) at each level to refine the alignment.
+        </p>
+      </div>
+    </section>
+
+    <!------------------------------------ LOW-RES IMAGES ------------------------------------>
+    <section class="part" id="low-res">
+      <div class="part-head">
+        <h2>Part 1: Low-Resolution Images (Single-Scale Search)</h2>
+        <p>Below are the alignments for the 3 smaller <code>.jpg</code> files using the exhaustive search method.</p>
+      </div>
+      
+      <div class="gallery">
+        <div class="gallery-item">
+          <img src="./media/cathedral_out.jpg" alt="Cathedral">
+          <p>Cathedral</p>
+        </div>
+        <div class="gallery-item">
+          <img src="./media/monastery_out.jpg" alt="Monastery">
+          <p>Monastery</p>
+        </div>
+        <div class="gallery-item">
+          <img src="./media/tobolsk_out.jpg" alt="Tobolsk">
+          <p>Tobolsk</p>
+        </div>
+      </div>
+
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th>Image Name</th>
+            <th>Green Shift (dy, dx)</th>
+            <th>Red Shift (dy, dx)</th>
+            <th>Time Taken (seconds)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>cathedral.jpg</td><td>(5, 2)</td><td>(12, 3)</td><td>0.63</td>
+          </tr>
+          <tr>
+            <td>monastery.jpg</td><td>(-3, 2)</td><td>(3, 2)</td><td>0.34</td>
+          </tr>
+          <tr>
+            <td>tobolsk.jpg</td><td>(3, 3)</td><td>(6, 3)</td><td>0.37</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!------------------------------------ HIGH-RES IMAGES ------------------------------------>
+    <section class="part" id="high-res">
+      <div class="part-head">
+        <h2>Part 2: High-Resolution Images (Image Pyramid)</h2>
+        <p>Below are the alignments for the 11 large <code>.tif</code> files using the multi-scale pyramid algorithm.</p>
+      </div>
+
+      <div class="gallery">
+        <div class="gallery-item">
+          <img src="./media/church_out.jpg" alt="church_out">
+          <p>Church</p>
+        </div>
+        <div class="gallery-item">
+          <img src="./media/emir_misaligned_out.jpg" alt="emir_misaligned_out">
+          <p>Emir</p>
+        </div>
+        <div class="gallery-item">
+          <img src="./media/harvesters_out.jpg" alt="harvesters_out">
+          <p>Harvesters</p>
+        </div>
+        <div class="gallery-item">
+          <img src="./media/icon_out.jpg" alt="icon_out">
+          <p>Icon</p>
+        </div>
+        <div class="gallery-item">
+          <img src="./media/ilemselga_out.jpg" alt="ilemselga_out">
+          <p>Ilemselga</p>
+        </div>
+        <div class="gallery-item">
+          <img src="./media/melons_out.jpg" alt="melons_out">
+          <p>Melons</p>
+        </div>
+        <div class="gallery-item">
+          <img src="./media/religous_painting_out.jpg" alt="religous_painting_out">
+          <p>Religous Painting</p>
+        </div>
+        <div class="gallery-item">
+          <img src="./media/self_portrait_out.jpg" alt="self_portrait_out">
+          <p>Self Portrait</p>
+        </div>
+        <div class="gallery-item">
+          <img src="./media/siren_out.jpg" alt="Siren">
+          <p>Siren</p>
+        </div>
+        <div class="gallery-item">
+          <img src="./media/three_generations_out.jpg" alt="three_generations_out">
+          <p>Three Generations</p>
+        </div>
+        <div class="gallery-item">
+          <img src="./media/wharf_out.jpg" alt="Wharf">
+          <p>Wharf</p>
+        </div>
+      </div>
+
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th>Image Name</th>
+            <th>Green Shift (dy, dx)</th>
+            <th>Red Shift (dy, dx)</th>
+            <th>Time Taken (seconds)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>church.tif</td><td>(25, 4)</td><td>(58, -4)</td><td>4.71</td></tr>
+          <tr><td>emir.tif</td><td>(49, 24)</td><td>(141, -205)</td><td>4.74</td></tr>
+          <tr><td>harvesters.tif</td><td>(60, 17)</td><td>(124, 13)</td><td>4.70</td></tr>
+          <tr><td>icon.tif</td><td>(41, 17)</td><td>(89, 23)</td><td>4.81</td></tr>
+          <tr><td>ilemselga.tif</td><td>(40, 7)</td><td>(130, 11)</td><td>4.89</td></tr>
+          <tr><td>melons.tif</td><td>(82, 11)</td><td>(178, 13)</td><td>4.92</td></tr>
+          <tr><td>religous_painting.tif</td><td>(28, 3)</td><td>(68, 7)</td><td>5.14</td></tr>
+          <tr><td>self_portrait.tif</td><td>(79, 29)</td><td>(176, 37)</td><td>4.90</td></tr>
+          <tr><td>siren.tif</td><td>(49, -6)</td><td>(96, -25)</td><td>4.84</td></tr>
+          <tr><td>three_generations.tif</td><td>(53, 14)</td><td>(112, 11)</td><td>4.80</td></tr>
+          <tr><td>wharf.tif</td><td>(15, -7)</td><td>(83, -16)</td><td>4.84</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!------------------------------------ EXTRA IMAGES ------------------------------------>
+    <section class="part" id="extra-images">
+      <div class="part-head">
+        <h2>Part 3: Additional Images from the Collection</h2>
+        <p>I selected 3 additional images from the Library of Congress Prokudin-Gorskii collection to test my algorithm on.</p>
+      </div>
+
+      <div class="gallery">
+        <div class="gallery-item"><img src="./media/Prokudin-Gorskii_Dog_out.jpg" alt="Prokudin-Gorskii_Dog_out"><p>Dog</p></div>
+        <div class="gallery-item"><img src="./media/Prokudin-Gorskii_River_out.jpg" alt="Prokudin-Gorskii_River_out"><p>River</p></div>
+        <div class="gallery-item"><img src="./media/Prokudin-Gorskii_Kid_out.jpg" alt="Prokudin-Gorskii_Kid_out"><p>Kid</p></div>
+      </div>
+
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th>Image Name</th>
+            <th>Green Shift (dy, dx)</th>
+            <th>Red Shift (dy, dx)</th>
+            <th>Time Taken (seconds)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Prokudin-Gorskii_Dog.tif</td><td>(61, 8)</td><td>(138, 8)</td><td>4.80</td></tr>
+          <tr><td>Prokudin-Gorskii_River.tif</td><td>(53, -17)</td><td>(120, -35)</td><td>4.88</td></tr>
+          <tr><td>Prokudin-Gorskii_Kid.tif</td><td>(33, -4)</td><td>(137, -11)</td><td>4.83</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!------------------------------------ BELLS & WHISTLES ------------------------------------>
+    <section class="part" id="bells-whistles">
+      <div class="part-head">
+        <h2>Bells & Whistles: Fixing Emir.tif</h2>
+        <p>
+          Standard alignment using pixel intensities fails on <code>emir.tif</code> because the brightness values of the Emir's clothing are vastly different across the Blue, Green, and Red channels. The standard algorithm tries to align dark patches with light patches, resulting in a blurry, misaligned image.
+        </p>
+        <br>
+        <p>
+          To solve this, I implemented <strong>Edge-Based Alignment</strong> using a <strong>Sobel filter</strong>. Instead of comparing raw color values, the algorithm extracts the structural edges (gradients) of the images using <code>cv.Sobel</code> to compute the gradient magnitude. Because the physical boundaries of the shapes remain consistent regardless of their channel brightness, calculating the Normalized Cross-Correlation on the <em>edges</em> perfectly aligns the image.
+        </p>
+      </div>
+
+      <div class="comparison">
+        <div class="gallery-item">
+          <img src="./media/emir_misaligned_out.jpg" alt="emir_misaligned_out">
+          <p><strong>Before:</strong> Emir Misaligned</p>
+        </div>
+        <div class="gallery-item">
+          <img src="./media/emir_fixed_out.jpg" alt="emir_fixed_out">
+          <p><strong>After:</strong> Emir Fixed</p>
+        </div>
       </div>
     </section>
 
