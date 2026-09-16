@@ -46,7 +46,23 @@
     justify-content: center; 
     margin-top: 20px; 
   }
+  .eqn {
+  text-align: center;
+  margin: 1.2em 0;
+  overflow-x: auto;
+  }
 </style>
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)']],
+      displayMath: [['$$', '$$']]
+    }
+  };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+
 </head>
 <body>
 
@@ -60,32 +76,22 @@
       <h2>Colorizing the Prokudin-Gorskii Photo Collection</h2>
     </header>
 
-    <!------------------------------------ ALGORITHM OVERVIEW ------------------------------------>
-    <section class="part" id="overview">
+    <!------------------------------------ LOW-RES IMAGES ------------------------------------>
+    <section class="part" id="low-res">
       <div class="part-head">
-        <h2>Algorithm Overview</h2>
-        <p>
-          The goal of this project is to take digitized glass plate images containing three distinct color channel exposures (Blue, Green, Red) and align them to form a single RGB color image. 
-        </p>
-        <br>
+        <h2>Part 1: Low-Resolution Images (Single-Scale Search)</h2>
+
         <p>
           <strong>Single-Scale Alignment:</strong> For smaller, low-resolution images, I implemented an exhaustive search over a [-15, 15] pixel window. 
         </p>
         <br>
         <p>
-          To score the alignment, I used the <strong>Normalized Cross-Correlation (NCC)</strong> metric. By cropping the borders before computing the NCC score, the algorithm avoids matching the white/black borders and focuses on the structural interior of the image.
+          To score the alignment, I used the <strong>Normalized Cross-Correlation (NCC)</strong> metric. By cropping the borders by 10% before computing the NCC score, the algorithm avoids matching the white/black borders and focuses on the structural interior of the image.
         </p>
-        <br>
-        <p>
-          <strong>Multi-Scale Pyramid Alignment:</strong> Exhaustive search becomes too slow for high-resolution <code>.tif</code> files. To handle this, I built a coarse-to-fine image pyramid. The algorithm recursively scales the image down by a factor of 2 until the width/height is below 400 pixels. It calculates a coarse alignment shift, scales that shift by 2 as it travels back up the pyramid, and performs a small localized search (window of [-2, 2]) at each level to refine the alignment.
-        </p>
-      </div>
-    </section>
+        <div class="eqn">
+          $$\text{NCC}(I_1, I_2) = \frac{\sum_i (I_1[i] - \bar{I_1})(I_2[i] - \bar{I_2})}{\sqrt{\sum_i (I_1[i]-\bar{I_1})^2} \cdot \sqrt{\sum_i (I_2[i]-\bar{I_2})^2}}$$
+        </div>
 
-    <!------------------------------------ LOW-RES IMAGES ------------------------------------>
-    <section class="part" id="low-res">
-      <div class="part-head">
-        <h2>Part 1: Low-Resolution Images (Single-Scale Search)</h2>
         <p>Below are the alignments for the 3 smaller <code>.jpg</code> files using the exhaustive search method.</p>
       </div>
       
@@ -115,13 +121,13 @@
         </thead>
         <tbody>
           <tr>
-            <td>cathedral.jpg</td><td>(5, 2)</td><td>(12, 3)</td><td>0.63</td>
+            <td>Cathedral</td><td>(5, 2)</td><td>(12, 3)</td><td>0.63</td>
           </tr>
           <tr>
-            <td>monastery.jpg</td><td>(-3, 2)</td><td>(3, 2)</td><td>0.34</td>
+            <td>Monastery</td><td>(-3, 2)</td><td>(3, 2)</td><td>0.34</td>
           </tr>
           <tr>
-            <td>tobolsk.jpg</td><td>(3, 3)</td><td>(6, 3)</td><td>0.37</td>
+            <td>Tobolsk</td><td>(3, 3)</td><td>(6, 3)</td><td>0.37</td>
           </tr>
         </tbody>
       </table>
@@ -131,6 +137,10 @@
     <section class="part" id="high-res">
       <div class="part-head">
         <h2>Part 2: High-Resolution Images (Image Pyramid)</h2>
+        <p>
+          <strong>Multi-Scale Pyramid Alignment:</strong> Exhaustive search becomes too slow for high-resolution <code>.tif</code> files. To handle this, I built a coarse-to-fine image pyramid. The algorithm recursively scales the image down by a factor of 2 until the width/height is below 400 pixels. It calculates a coarse alignment shift, scales that shift by 2 as it travels back up the pyramid, and performs a small localized search (window of [-2, 2]) at each level to refine the alignment.
+        </p>
+        <br>
         <p>Below are the alignments for the 11 large <code>.tif</code> files using the multi-scale pyramid algorithm.</p>
       </div>
 
@@ -140,8 +150,8 @@
           <p>Church</p>
         </div>
         <div class="gallery-item">
-          <img src="./media/emir_misaligned_out.jpg" alt="emir_misaligned_out">
-          <p>Emir</p>
+          <img src="./media/emir_out.jpg" alt="emir_out">
+          <p>Emir (Misaligned)</p>
         </div>
         <div class="gallery-item">
           <img src="./media/harvesters_out.jpg" alt="harvesters_out">
@@ -191,17 +201,17 @@
           </tr>
         </thead>
         <tbody>
-          <tr><td>church.tif</td><td>(25, 4)</td><td>(58, -4)</td><td>4.71</td></tr>
-          <tr><td>emir.tif</td><td>(49, 24)</td><td>(141, -205)</td><td>4.74</td></tr>
-          <tr><td>harvesters.tif</td><td>(60, 17)</td><td>(124, 13)</td><td>4.70</td></tr>
-          <tr><td>icon.tif</td><td>(41, 17)</td><td>(89, 23)</td><td>4.81</td></tr>
-          <tr><td>ilemselga.tif</td><td>(40, 7)</td><td>(130, 11)</td><td>4.89</td></tr>
-          <tr><td>melons.tif</td><td>(82, 11)</td><td>(178, 13)</td><td>4.92</td></tr>
-          <tr><td>religous_painting.tif</td><td>(28, 3)</td><td>(68, 7)</td><td>5.14</td></tr>
-          <tr><td>self_portrait.tif</td><td>(79, 29)</td><td>(176, 37)</td><td>4.90</td></tr>
-          <tr><td>siren.tif</td><td>(49, -6)</td><td>(96, -25)</td><td>4.84</td></tr>
-          <tr><td>three_generations.tif</td><td>(53, 14)</td><td>(112, 11)</td><td>4.80</td></tr>
-          <tr><td>wharf.tif</td><td>(15, -7)</td><td>(83, -16)</td><td>4.84</td></tr>
+          <tr><td>Church</td><td>(25, 4)</td><td>(58, -4)</td><td>4.71</td></tr>
+          <tr><td>Emir (Misaligned)</td><td>(49, 24)</td><td>(141, -205)</td><td>4.74</td></tr>
+          <tr><td>Harvesters</td><td>(60, 17)</td><td>(124, 13)</td><td>4.70</td></tr>
+          <tr><td>Icon</td><td>(41, 17)</td><td>(89, 23)</td><td>4.81</td></tr>
+          <tr><td>Ilemselga</td><td>(40, 7)</td><td>(130, 11)</td><td>4.89</td></tr>
+          <tr><td>Melons</td><td>(82, 11)</td><td>(178, 13)</td><td>4.92</td></tr>
+          <tr><td>Religous Painting</td><td>(28, 3)</td><td>(68, 7)</td><td>5.14</td></tr>
+          <tr><td>Self Portrait</td><td>(79, 29)</td><td>(176, 37)</td><td>4.90</td></tr>
+          <tr><td>Siren</td><td>(49, -6)</td><td>(96, -25)</td><td>4.84</td></tr>
+          <tr><td>Three Generations</td><td>(53, 14)</td><td>(112, 11)</td><td>4.80</td></tr>
+          <tr><td>Wharf</td><td>(15, -7)</td><td>(83, -16)</td><td>4.84</td></tr>
         </tbody>
       </table>
     </section>
@@ -214,9 +224,9 @@
       </div>
 
       <div class="gallery">
-        <div class="gallery-item"><img src="./media/Prokudin-Gorskii_Dog_out.jpg" alt="Prokudin-Gorskii_Dog_out"><p>Dog</p></div>
-        <div class="gallery-item"><img src="./media/Prokudin-Gorskii_River_out.jpg" alt="Prokudin-Gorskii_River_out"><p>River</p></div>
-        <div class="gallery-item"><img src="./media/Prokudin-Gorskii_Kid_out.jpg" alt="Prokudin-Gorskii_Kid_out"><p>Kid</p></div>
+        <div class="gallery-item"><img src="./media/Bashkir_dog_out.jpg" alt="Bashkir_dog_out"><p>Bashkir Dog</p></div>
+        <div class="gallery-item"><img src="./media/Belaia_River_out.jpg" alt="Belaia_River_out"><p>Belaia River</p></div>
+        <div class="gallery-item"><img src="./media/On_the_island_of_Capri_out.jpg" alt="On_the_island_of_Capri_out"><p>On the Island of Capri</p></div>
       </div>
 
       <table class="results-table">
@@ -229,9 +239,9 @@
           </tr>
         </thead>
         <tbody>
-          <tr><td>Prokudin-Gorskii_Dog.tif</td><td>(61, 8)</td><td>(138, 8)</td><td>4.80</td></tr>
-          <tr><td>Prokudin-Gorskii_River.tif</td><td>(53, -17)</td><td>(120, -35)</td><td>4.88</td></tr>
-          <tr><td>Prokudin-Gorskii_Kid.tif</td><td>(33, -4)</td><td>(137, -11)</td><td>4.83</td></tr>
+          <tr><td>Bashkir Dog</td><td>(61, 8)</td><td>(138, 8)</td><td>4.80</td></tr>
+          <tr><td>Belaia River</td><td>(53, -17)</td><td>(120, -35)</td><td>4.88</td></tr>
+          <tr><td>On the Island of Capri</td><td>(45, -13)</td><td>(103, -11)</td><td>4.91</td></tr>
         </tbody>
       </table>
     </section>
@@ -239,7 +249,7 @@
     <!------------------------------------ BELLS & WHISTLES ------------------------------------>
     <section class="part" id="bells-whistles">
       <div class="part-head">
-        <h2>Bells & Whistles: Fixing Emir.tif</h2>
+        <h2>Part 4: Bells & Whistles - Fixing Emir.tif</h2>
         <p>
           Standard alignment using pixel intensities fails on <code>emir.tif</code> because the brightness values of the Emir's clothing are vastly different across the Blue, Green, and Red channels. The standard algorithm tries to align dark patches with light patches, resulting in a blurry, misaligned image.
         </p>
@@ -247,18 +257,44 @@
         <p>
           To solve this, I implemented <strong>Edge-Based Alignment</strong> using a <strong>Sobel filter</strong>. Instead of comparing raw color values, the algorithm extracts the structural edges (gradients) of the images using <code>cv.Sobel</code> to compute the gradient magnitude. Because the physical boundaries of the shapes remain consistent regardless of their channel brightness, calculating the Normalized Cross-Correlation on the <em>edges</em> perfectly aligns the image.
         </p>
+        <br>
+        <p>
+          A Sobel filter convolves the image with two 3&times;3 kernels to estimate the horizontal and vertical
+          intensity gradients:
+        </p>
+        <div class="eqn">
+          $$G_x = \begin{bmatrix}-1&0&1\\-2&0&2\\-1&0&1\end{bmatrix} * I \qquad
+          G_y = \begin{bmatrix}-1&-2&-1\\0&0&0\\1&2&1\end{bmatrix} * I$$
+        </div>
+        <div class="eqn">$$G = \sqrt{G_x^2 + G_y^2}$$</div>
       </div>
 
       <div class="comparison">
         <div class="gallery-item">
-          <img src="./media/emir_misaligned_out.jpg" alt="emir_misaligned_out">
-          <p><strong>Before:</strong> Emir Misaligned</p>
+          <img src="./media/emir_out.jpg" alt="emir_out">
+          <p><strong>Before:</strong> Emir (Misaligned)</p>
         </div>
         <div class="gallery-item">
-          <img src="./media/emir_fixed_out.jpg" alt="emir_fixed_out">
-          <p><strong>After:</strong> Emir Fixed</p>
+          <img src="./media/emir_for_sobel_out.jpg" alt="emir_for_sobel_out">
+          <p><strong>After:</strong> Emir (Fixed)</p>
         </div>
       </div>
+
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th>Image Name</th>
+            <th>Green Shift (dy, dx)</th>
+            <th>Red Shift (dy, dx)</th>
+            <th>Time Taken (seconds)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Emir (Misaligned)</td><td>(49, 24)</td><td>(141, -205)</td><td>4.74</td></tr>
+          <tr><td>Emir (Fixed)</td><td>(49, 24)</td><td>(107, 40)</td><td>7.53</td></tr>
+        </tbody>
+      </table>
+
     </section>
 
   </div>
