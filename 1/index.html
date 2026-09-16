@@ -255,7 +255,7 @@
         </p>
         <br>
         <p>
-          To solve this, I implemented <strong>Edge-Based Alignment</strong> using a <strong>Sobel filter</strong>. Instead of comparing raw color values, the algorithm extracts the structural edges (gradients) of the images using <code>cv.Sobel</code> to compute the gradient magnitude. Because the physical boundaries of the shapes remain consistent regardless of their channel brightness, calculating the Normalized Cross-Correlation on the <em>edges</em> perfectly aligns the image.
+          To solve this, I implemented <strong>Edge-Based Alignment</strong> using a <strong>Sobel filter</strong>.
         </p>
         <br>
         <p>
@@ -267,6 +267,12 @@
           G_y = \begin{bmatrix}-1&-2&-1\\0&0&0\\1&2&1\end{bmatrix} * I$$
         </div>
         <div class="eqn">$$G = \sqrt{G_x^2 + G_y^2}$$</div>
+        <p>
+          Instead of comparing raw pixel intensities, I compute NCC on the gradient magnitude \(G\) of each channel
+          rather than the raw channel itself &mdash; same metric, different input. Because the physical boundaries
+          of the shapes remain consistent regardless of channel brightness, calculating NCC on the <em>edges</em>
+          aligns the image correctly where raw-pixel NCC could not.
+        </p>
       </div>
 
       <div class="comparison">
