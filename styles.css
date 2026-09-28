@@ -310,3 +310,19 @@ footer{
   color: var(--ink-soft);
   text-align: left;
 }
+.results-table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    margin: 30px 0; 
+    font-size: 0.9rem;
+  }
+.results-table th, .results-table td { 
+  border: 1px solid var(--line); 
+  padding: 12px; 
+  text-align: center; 
+}
+.results-table th { 
+  background-color: var(--paper-dim); 
+  font-family: 'IBM Plex Mono', monospace; 
+  font-weight: 500;
+}
