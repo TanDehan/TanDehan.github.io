@@ -1,17 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Project 0: Becoming Friends with Your Camera</title>
-<link rel="stylesheet" href="../styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project 2: Fun with Filters and Frequencies</title>
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    /* Quick grid styles for side-by-side image comparisons */
+    .image-grid-1 { 
+      display: grid; 
+      grid-template-columns: 1fr; 
+      gap: 20px; 
+      text-align: center; 
+      align-items: center;
+    }
+    .image-grid-2 { 
+      display: grid; 
+      grid-template-columns: 1fr 1fr; 
+      gap: 20px; 
+      text-align: center; 
+      align-items: center;
+    }
+    .image-grid-2-2 { 
+      display: grid; 
+      grid-template-columns: repeat(2, 1fr); ; 
+      gap: 20px; 
+      text-align: center; 
+      align-items: center;
+    }
+    .image-grid-3 { 
+      display: grid; 
+      grid-template-columns: 1fr 1fr 1fr; 
+      gap: 20px; 
+      text-align: center; 
+      align-items: center;
+    }
+    .image-grid-4 { 
+      display: grid; 
+      grid-template-columns: 1fr 1fr 1fr 1fr; 
+      gap: 15px; 
+      text-align: center; 
+      align-items: center;
+    }
+    .image-grid-5 { 
+      display: grid; 
+      grid-template-columns: 1fr 1fr 1fr 1fr 1fr; 
+      gap: 15px; 
+      text-align: center; 
+      align-items: center;
+    } 
+    .image-grid-5-2 { 
+      display: grid; 
+      grid-template-columns: repeat(5, 1fr); ; 
+      gap: 15px; 
+      text-align: center; 
+      align-items: center;
+    } 
+    .image-grid-6 { 
+      display: grid; 
+      grid-template-columns: repeat(3, 1fr); 
+      gap: 10px; 
+      text-align: center; 
+      align-items: center;
+    }
+    img { 
+      max-width: 100%; 
+      height: auto; 
+      border-radius: 8px; 
+    }
+    figcaption { 
+      font-size: 0.9em; 
+      color: #555; 
+      margin-top: 8px; 
+      font-style: italic; 
+    }
+    .highlight { 
+      background-color: #f4f4f9; 
+      padding: 15px; 
+      border-left: 4px solid #005A9C; 
+      margin: 20px 0; 
+    }
+    .codebox {
+      border: 2px solid #333;
+      border-radius: 8px;
+      padding: 15px;
+      background-color: #D5D5D5;
+      overflow-x: auto;
+    }
+    .codebox pre {
+        margin: 0;
+    }
+    .codebox code {
+        font-family: monospace;
+        font-size: 14px;
+    }
+  </style>
+
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['\\(', '\\)']],
+        displayMath: [['$$', '$$']]
+      }
+    };
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+
 </head>
 <body>
 
 <div class="page-frame">
   <div class="board">
 
-    <a class="back-link" href="../index.html">&larr; CS180 portfolio</a>
+    <a class="back-link" href="../index.html">&larr; CS180 Portfolio</a>
 
     <header class="hero">
       <h1>Project 2: Fun with Filters and Frequencies</h1>
@@ -19,14 +120,471 @@
 
     <!------------------------------------ PART 1 ------------------------------------>
     <section class="part" id="part1">
-      <div class="part-head">
-        <h2>Its not done :[</h2>
-        <figure>
-          <div class="frame">
-            <img src="../PlaceHolderImage/sad cat.png" alt="Sad Cat">
-          </div>
-        </figure>
+      <h2>Part 1: Fun with Filters</h2>
+      <h3>1.1 Convolutions from Scratch</h3>
+
+      <h4>Convolution using Four Loops</h4>
+      <div class="codebox">
+      <pre><code>def convolution_four_loops (image, kernal) :
+    k_flipped = np.flip(kernal)
+    k_h, k_w = k_flipped.shape[:2]
+    pad_h, pad_w = k_h // 2, k_w // 2
+
+    padded_image = np.pad(image, ((pad_h, pad_h), (pad_w, pad_w)), mode='constant', constant_values=0)
+    output = np.zeros_like(image, dtype=np.float64)
+
+    for i in range(image.shape[0]) :
+        for j in range(image.shape[1]) :
+            acc = 0.0
+            for k in range(k_h) :
+                for m in range(k_w) :
+                    acc += padded_image[i + k, j + m] * k_flipped[k, m]
+            output[i, j] = acc
+
+    return output</code></pre>
+    </div>
+    <br>
+
+    <h4>Convolution using Two Loops</h4>
+    <div class="codebox">
+      <pre><code>def convolution_two_loops (image, kernal) :
+    k_flipped = np.flip(kernal)
+    k_h, k_w = k_flipped.shape[:2]
+    pad_h, pad_w = k_h // 2, k_w // 2
+
+    padded_image = np.pad(image, ((pad_h, pad_h), (pad_w, pad_w)), mode='constant', constant_values=0)
+    output = np.zeros_like(image, dtype=np.float64)
+
+    for i in range(image.shape[0]) :
+        for j in range(image.shape[1]) :
+            window = padded_image[i: i + k_h, j: j + k_w]
+            output[i, j] = np.sum(window * k_flipped)
+
+    return output</code></pre>
+    </div>
+
+    <br>
+    <p>
+      I tested my implementation against the built-in convolution function, scipy.signal.convolve2d, and they matched exactly.
+      The only difference was in their runtime:
+    </p>
+    <table class="results-table">
+        <thead>
+          <tr>
+            <th>Implementation</th>
+            <th>Runtime (seconds)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Four Loops</td><td>9.802</td>
+          <tr><td>Two Loops</td><td>1.697</td>
+          <tr><td>scipy.signal.convolve2d</td><td>0.053</td>
+        </tbody>
+      </table>
+      <p>
+        These runtimes reflect the work that happens. The four loop 
+        implementation multiplies one kernel entry at a time, making it
+        almost 6 times slower than the two loop implementation. The two 
+        loop version does the multiply and sum of each kernel as a single 
+        vectorised NumPy operation. scipy.signal.convolve2d runs on 
+        compiled code, allowing it to be about 32 times faster than the 
+        two loop implementation and about 185 times than the four loop 
+        implementation.
+        <br><br>
+        All three versions flips the kernel and uses zero padding, ensuring 
+        that the output are the same size as the input and the results 
+        agree at the image borders.
+      </p>
+      <h4>Selfie</h4>
+      <p>
+        For my selfie, I used a 9x9 box filter, which replaces each pixel with 
+        the average of its 9x9 neighbourhood. This causes the image to blur 
+        as seen below.
+      </p>
+      <div class="image-grid-2">
+        <figure><img src="media/part1_1_original.png" alt="Original"><figcaption>Original</figcaption></figure>
+        <figure><img src="media/part1_1_box_filter.png" alt="9x9 Box Filter"><figcaption>9x9 Box Filter</figcaption></figure>
       </div>
+
+      <p>
+        Convolving my selfie with the finite difference operator D_x = [1, 0, -1] highlights 
+        vertical edges. At each pixel, it takes the pixel on the right minus the 
+        pixel on the left, so it responds to the brightness changes along 
+        the x-axis. <br>
+        <br>
+        Convolving with D_y = [[1], [0], [-1]] does the same thing, but along 
+        the y-axis instead, therefore, it highlights the horizontal edges.<br>
+        <br>
+        As seen in the images above, D_x shows the vertical edges of my head 
+        more clearly, and D_y shows the horizontal edges of my shoulders more 
+        clearly.
+      </p>
+      <div class="image-grid-3">
+        <figure><img src="media/part1_1_original.png" alt="Original"><figcaption>Original</figcaption></figure>
+        <figure><img src="media/part1_1_dx.png" alt="Dx"><figcaption>D_x (Vertical Edges)</figcaption></figure>
+        <figure><img src="media/part1_1_dy.png" alt="Dy"><figcaption>D_y (Horizontal Edges)</figcaption></figure>
+      </div>
+
+    <!-------------------------------------------------------------------------------->
+
+      <h3>1.2 Finite Difference Operator</h3>
+      <p>
+        To detect edges in the cameraman image, I convolved the image with the finite difference operators 
+        <strong>D_x = [1, 0, -1]</strong> and <strong>D_y = [[1], [0], [-1]]</strong>. 
+        I then computed the gradient magnitude pixel-wise using the Pythagorean theorem: 
+        $$ \sqrt{(I * D_x)^2 + (I * D_y)^2} $$
+        Finally, I binarized the gradient magnitude image using a threshold of 0.2 
+        to isolate the strongest edges.
+      </p>
+      <div class="image-grid-4">
+        <figure><img src="media/cameraman.png" alt="Original"><figcaption>Original</figcaption></figure>
+        <figure><img src="media/part1_2_dx_0_2.png" alt="Dx"><figcaption>D_x (Vertical Edges)</figcaption></figure>
+        <figure><img src="media/part1_2_dy_0_2.png" alt="Dy"><figcaption>D_y (Horizontal Edges)</figcaption></figure>
+        <figure><img src="media/part1_2_gradient_magnitude_0_2.png" alt="Magnitude"><figcaption>Gradient Magnitude</figcaption></figure>
+      </div>
+      
+      <p>
+        To select the best threshold to suppress the noise while showing all the real edges, I swept through various 
+        values and compared each one.
+      </p>
+      <div class="image-grid-6">
+        <figure><img src="media/part1_2_edges_0_1.png" alt="Threshold 0.1"><figcaption>Threshold = 0.10</figcaption></figure>
+        <figure><img src="media/part1_2_edges_0_15.png" alt="Threshold 0.15"><figcaption>Threshold = 0.15</figcaption></figure>
+        <figure><img src="media/part1_2_edges_0_2.png" alt="Threshold 0.2"><figcaption>Threshold = 0.20 (Chosen)</figcaption></figure>
+        <figure><img src="media/part1_2_edges_0_25.png" alt="Threshold 0.25"><figcaption>Threshold = 0.25</figcaption></figure>
+        <figure><img src="media/part1_2_edges_0_3.png" alt="Threshold 0.3"><figcaption>Threshold = 0.30</figcaption></figure>
+        <figure><img src="media/part1_2_edges_0_35.png" alt="Threshold 0.35"><figcaption>Threshold = 0.35</figcaption></figure>
+
+      </div>
+      <p>
+        From the results above, I decided to select a threshold value of 0.2. At 0.1 and 0.15, many pixels were flagged as 
+        edges. This results in a lot of noise in the background. At 0.25 and above, most of the noise have been removed. 
+        However, it also starts to drop edges from the cameraman and the tripod. Therefore, 0.2 was the best middle point
+        to ensure that the image while still shows the finer edges of the tripod and the outline of the cameramen. 
+      </p>
+
+
+    <!-------------------------------------------------------------------------------->
+
+    <h3>1.3 Derivative of Gaussian (DoG) Filter</h3>
+    <p>
+        Applying the finite difference operators directly to the original image results in noisy edges. To fix this, 
+        I first blurred the image using a Gaussian filter and then applied the 
+        difference operators. I also created a derivatibe of Gaussian (DoG) 
+        filter by convolving the Gaussian with D_x and D_y first and verified 
+        that applying it to the original image returns the same result with only 
+        one convolution operation.
+    </p>
+
+    <h4>Sigma Sweep</h4>
+    <div class="image-grid-6">
+      <figure><img src="media/part1_3_sigma_comparisons_edges_0.5.png" alt="0.5"><figcaption>Sigma = 0.5</figcaption></figure>
+      <figure><img src="media/part1_3_sigma_comparisons_edges_1.0.png" alt="1.0"><figcaption>Sigma = 1.0 (Chosen)</figcaption></figure>
+      <figure><img src="media/part1_3_sigma_comparisons_edges_1.5.png" alt="1.5"><figcaption>Sigma = 1.5</figcaption></figure>
+      <figure><img src="media/part1_3_sigma_comparisons_edges_2.0.png" alt="2.0"><figcaption>Sigma = 2.0</figcaption></figure>
+      <figure><img src="media/part1_3_sigma_comparisons_edges_2.5.png" alt="2.5"><figcaption>Sigma = 2.5</figcaption></figure>
+      <figure><img src="media/part1_3_sigma_comparisons_edges_3.0.png" alt="3.0"><figcaption>Sigma = 3.0</figcaption></figure>
+    </div>    
+    <p>
+      From the results above, I decided to select a sigma value of 1.0. This enhances the edges extracted in Part 1.2.
+    </p>
+    <h4>What differences do I see?</h4> 
+    <div class="image-grid-2-2">
+      <figure><img src="media/part1_2_gradient_magnitude_0_2.png" alt="Threshold 0.2 " alt="Prev Grad Mag"><figcaption>Previous Gradient Magnitude</figcaption></figure>
+      <figure><img src="media/part1_3_sigma_comparisons_gradient_magnitude_1.0.png" alt="New Grad Mag"><figcaption>New Gradient Magnitude</figcaption></figure>
+      <figure><img src="media/part1_2_edges_0_2.png" alt="Threshold 0.2 " alt="Prev Edges"><figcaption>Previous Edges</figcaption></figure> 
+      <figure><img src="media/part1_3_sigma_comparisons_edges_1.0.png" alt="New Edges"><figcaption>New Edges</figcaption></figure>       
+    </div>
+    <p>
+      From the comparisons above, the main difference that I can see is by blurring the image first is that 
+      the edges are more pronounced. Additionally, the amount of noise around the bottom of the image has been 
+      completely removed. The trade-off for this is that the edges have becoem 
+      thicker and very fine details such as the cameraman's face are smoothed 
+      away.
+    </p>
+
+    <h4>Derivative of Gaussian Filters</h4>
+    <p>
+      Since convolution is associative, blurring and then differentiating 
+      is the same as convolving the image once with a filter made by 
+      combining the Gaussian and the difference operator ahead of time.
+      $$(I * G) * D_x = I * (G * D_x)$$
+      I built the DoG fikters by convolving the 2D Gaussian kernel directly with 
+      d_x and D_y. The resulting filters act as a single operation that 
+      smooths the image and extracts the gradient at the same time.
+    </p>
+    <div class="image-grid-1">
+      <figure><img src="media/part1_3_dog_filters.png" alt="Derivative of Gaussian Filters"><figcaption>Derivative of Gaussian Filters</figcaption></figure>
+    </div>    
+
+    <h4>Verification of Results</h4>
+    <p>
+
+    </p>
+
+    </section>
+
+    <hr>
+
+    <!------------------------------------ PART 2 ------------------------------------>
+    <section class="part" id="part2">
+      <h2>Part 2: Fun with Frequencies</h2>
+      
+      <h3>2.1 Image "Sharpening"</h3>
+      <p>
+        I implemented unsharp masking by extracting the high frequencies of an image (Original - Gaussian Blur) and adding them back to the original image. 
+        Mathematically, this is expressed as: $$ I_{sharpened} = I + \alpha(I - I * G) $$ 
+        where α dictates the sharpening strength.
+      </p>
+      <div class="image-grid-3">
+        <figure><img src="media/taj.jpg" alt="Original Taj"><figcaption>Original</figcaption></figure>
+        <figure><img src="media/part2_1_low_frequency.png" alt="Low Frequencies (Blurred)"><figcaption>Low Frequencies (Blurred)</figcaption></figure>
+        <figure><img src="media/part2_1_high_frequency.png" alt="High Frequencies"><figcaption>High Frequencies</figcaption></figure>
+      </div>
+      
+      <p>
+        To determine the best alpha for sharpening, I interated through a series of alphas. The results are display 
+        below.
+      </p>
+      <div class="image-grid-2-2">
+        <figure><img src="media/part2_1_out_2step_0_5.png" alt="Alpha = 0.5"><figcaption>Alpha = 0.5</figcaption></figure>
+        <figure><img src="media/part2_1_out_2step_1_0.png" alt="Alpha = 1.0"><figcaption>Alpha = 1.0</figcaption></figure>
+        <figure><img src="media/part2_1_out_2step_1_5.png" alt="Alpha = 1.5"><figcaption>Alpha = 1.5</figcaption></figure>
+        <figure><img src="media/part2_1_out_2step_2_0.png" alt="Alpha = 2.0"><figcaption>Alpha = 2.0</figcaption></figure>
+      </div>
+      <p>
+        From the comparisons above, we can see that an alpha of 1.0 balances the visually finer edges against oversharpening 
+        artifacts, which creates halos around the boundaries, which are more pronounced in higher alpha values. 
+      </p>
+
+      <br>
+      <h4>
+        Palace of Fine Arts
+      </h4>
+      <p>
+        For evaluation, I used a sharp image, blurred it, and resharpened it.
+      </p>
+      <div class="image-grid-3">
+        <figure><img src="media/part2_1_sharp_image.png" alt="Sharp Image"><figcaption>Sharp Image</figcaption></figure>
+        <figure><img src="media/part2_1_blurred_sharp_image.png" alt="Blurred"><figcaption>Blurred</figcaption></figure>
+        <figure><img src="media/part2_1_resharpened_image_high_pass.png" alt="High Freq"><figcaption>High Frequencies</figcaption></figure>
+      </div>
+      <br>
+      <div class="image-grid-2">
+        <figure><img src="media/part2_1_sharp_image.png" alt="Sharp Image"><figcaption>Sharp Image</figcaption></figure>
+        <figure><img src="media/part2_1_resharpened_image.png" alt="Resharpened"><figcaption>Resharpened</figcaption></figure>
+      </div>
+      <p>
+        The unsharp masking amplifies the frequecy content that survived the blurring. However, it is unable to recover 
+        destroyed details. Once the fine textures are averaged away by the Gaussian, no amount of high frequency boosting 
+        can recover it. Hence, this explains why the resharpened image looks blurrer than the original sharp image.
+      </p>
+    <!-------------------------------------------------------------------------------->
+
+      <h3>2.2 Hybrid Images</h3>
+      <p>
+        Hybrid images rely on human visual perception. We see high frequencies up close and low frequencies from afar. 
+        I created hybrid images by blending the high frequencies of one image (via a Laplacian-style subtraction) with 
+        the low frequencies of another (via a Gaussian blur).
+      </p>
+      
+      <h4>
+        Derek and Nutmeg
+      </h4>
+      <div class="image-grid-2">
+        <figure><img src="media/DerekPicture.jpg" alt="Derek Original"><figcaption>Derek Original</figcaption></figure>
+        <figure><img src="media/nutmeg.jpg" alt="Nutmeg Original"><figcaption>Nutmeg Original</figcaption></figure>
+      </div>
+      <p>
+        Hybrid images work by combining frequency content that is spatially registered. Therefore, it is important to align 
+        the facial features of Derek and Nutmeg. For this, I aligned both images by selecting both eyes of Derek and Nutmeg. 
+        The code then rescales, rotates, and centers both images based on the selected points.
+      </p>
+      <div class="image-grid-2">
+        <figure><img src="media/part2_2_im1_aligned_derek_nutmeg.png" alt="Derek Aligned"><figcaption>Derek Aligned</figcaption></figure>
+        <figure><img src="media/part2_2_im2_aligned_derek_nutmeg.png" alt="Nutmeg Aligned"><figcaption>Nutmeg Aligned</figcaption></figure>
+      </div>
+      <br>
+      <div class="image-grid-1">
+        <figure><img src="media/part2_2_hybrid_derek_nutmeg_7tv.png" alt="Derek-Nutmeg Hybrid"><figcaption>Derek-Nutmeg at Various Sizes</figcaption></figure>
+      </div>
+      <h4>Cutoff Frequencies</h4>
+      <p>
+        To find out the best cutoff frequencies, I swept through various 
+        values for sigma (σ). σ1 is the low pass cutoff applied to Derek 
+        (image1). A larger σ1 blurs him more, so only coarser structures 
+        survives. σ2 is the cutoff used to build the high pass version of 
+        Nutmeg (image2). It is computed as the original image of Nutmeg minus 
+        a blurred Nutmeg. A larger σ2 removes on the lowest frequencies, so 
+        more of its details are passed through.<br>
+        <br>
+        A small σ1 leave too much of Derek's fine features that competes with 
+        Nutmeg's details up close, while having too large of a σ1 turns him 
+        into a shapeless blur that is hard to recognise at far distances. A 
+        small σ2 leaves too little of Nutmeg to see up close, while a large σ2 
+        lets too much of its structure thorugh that she dominates the image 
+        even at a far distance. For Derek and Nutmeg, I chose σ1 = 12 and σ2 = 8 
+        as the it gave the best balance between the two. For the two other 
+        examples, I followed this same procedure, but will not be showing 
+        this grid.
+      </p>
+      <div class="image-grid-1">
+        <figure><img src="media/part2_2_sigma_sweep_derek_nutmeg.png" alt="Sigma Sweep"><figcaption>Sigma Sweep</figcaption></figure>
+      </div>
+
+      <h4>
+        Lord Farquaad and Handsome Squidward
+      </h4>
+      <div class="image-grid-2">
+        <figure><img src="media/farquaad.png" alt="Farquaad Original"><figcaption>Farquaad Original</figcaption></figure>
+        <figure><img src="media/handsome_squidward.png" alt="Squidward Original"><figcaption>Squidward Original</figcaption></figure>
+      </div>
+      <p>
+        For this hybrid image, I used sigma1 = 3 and sigma2 = 4.
+      </p>
+      <div class="image-grid-3">
+        <figure><img src="media/part2_2_im1_aligned_lord_squaadward.png" alt="Faaquaad Aligned"><figcaption>Faaquaad Aligned</figcaption></figure>
+        <figure><img src="media/part2_2_im2_aligned_lord_squaadward.png" alt="Squidward Aligned"><figcaption>Squidward Aligned</figcaption></figure>
+        <figure><img src="media/part2_2_hybrid_lord_squaadward.png" alt="Lord Squaadward Hybrid"><figcaption>Lord Squaadward Hybrid</figcaption></figure>
+      </div>
+      <br>
+      <div class="image-grid-1">
+        <figure><img src="media/part2_2_hybrid_lord_squaadward_7tv.jpg" alt="Lord Squaadward Sizes"><figcaption>Lord Squaadward at Various Sizes</figcaption></figure>
+      </div>
+
+      <h4>
+        Normal Spongebob and Tank Cat
+      </h4>
+      <div class="image-grid-2">
+        <figure><img src="media/spongebob.png" alt="Spongebob Original"><figcaption>Spongebob Original</figcaption></figure>
+        <figure><img src="media/tank_cat.png" alt="Tank Cat Original"><figcaption>Tank Cat Original</figcaption></figure>
+      </div>
+      <p>
+        For this hybrid image, I used sigma1 = 3 and sigma2 = 4.
+      </p>
+      <div class="image-grid-3">
+        <figure><img src="media/part2_2_im2_aligned_tankbob.png" alt="Spongebob Aligned"><figcaption>Spongebob Aligned</figcaption></figure>
+        <figure><img src="media/part2_2_im1_aligned_tankbob.png" alt="Tank Cat Aligned"><figcaption>Tank Cat Aligned</figcaption></figure>
+        <figure><img src="media/part2_2_hybrid_tankbob.png" alt="Tankbob Hybrid"><figcaption>Tankbob Hybrid</figcaption></figure>
+      </div>
+      <br>
+      <div class="image-grid-1">
+        <figure><img src="media/part2_2_hybrid_tankbob_7tv.jpg" alt="Tankbob Sizes"><figcaption>Tankbob at various sizes</figcaption></figure>
+      </div>
+
+      <div class="highlight">
+        <strong>Frequency Analysis (Fourier Transforms): (TO DO: USE THIS FOR EITHER SQUAIDWARD OR SPONGEBOB)</strong>
+        <p>Below are the 2D Fourier transforms showing the frequency domain at each step of the process. You can see the high-pass filter leaving only the outer perimeter (high frequencies) and the low-pass filter leaving only the bright center (low frequencies).</p>
+      </div>
+      <p>
+        The low passed image spectrun concentrates almost all
+      </p>
+      <div class="image-grid-5-2">
+        <figure><img src="media/part2_2_im1_aligned_tankbob.png" alt="Tank Cat"><figcaption>Tank Cat</figcaption></figure>
+        <figure><img src="media/part2_2_im1_low_freq_tankbob.png" alt="Tank Cat Low Pass"><figcaption>Tank Cat Low Pass</figcaption></figure>
+        <figure><img src="media/part2_2_im2_aligned_tankbob.png" alt="Spongebob"><figcaption>Spongebob</figcaption></figure>
+        <figure><img src="media/part2_2_im2_high_freq_tankbob.png" alt="Spongebob Low Pass"><figcaption>Spongebob High Pass</figcaption></figure>
+        <figure><img src="media/part2_2_hybrid_tankbob.png" alt="Hybrid"><figcaption>Hybrid</figcaption></figure>
+
+        <figure><img src="media/part2_2_im1_aligned_tankbob_fft.png" alt="Tank Cat FFT"><figcaption>Tank Cat FFT</figcaption></figure>
+        <figure><img src="media/part2_2_high_freq_tankbob_fft.png" alt="Tank Cat High Pass FFT"><figcaption>T-Cat High Pass FFT</figcaption></figure>
+        <figure><img src="media/part2_2_im2_aligned_tankbob_fft.png" alt="Spongebob FFT"><figcaption>Spongebob FFT</figcaption></figure>
+        <figure><img src="media/part2_2_low_freq_tankbob_fft.png" alt="Spongebob Low Pass FFT"><figcaption>S-bob Low Pass FFT</figcaption></figure>
+        <figure><img src="media/part2_2_hybrid_tankbob_fft.png" alt="Hybrid FFT"><figcaption>Hybrid FFT</figcaption></figure>
+      </div>
+
+    <!-------------------------------------------------------------------------------->
+
+      <h3>2.3 Gaussian and Laplacian Stacks</h3>
+      <p>
+        Rather than downsampling, I kept every level at full resolution 
+        and built each successive Gaussian stack level by reapplying 
+        the same sigma = 8 Gaussian filter to the previous level so 
+        that the blur is accumulated across the stack. This produced 
+        a stack that behaves similarly to a downsampled pyramid without 
+        the resolution loss.
+        <br><br>
+        Summing every level of the Laplacian stack reconstructs the 
+        original image exactly as shown below.
+      </p>
+      <figure>
+        <img src="media/part2_3_stacks.png" alt="Laplacian Stack Visualization">
+        <figcaption>Laplacian Stack (L0, L2, L4) and the Collapsed Image</figcaption>
+      </figure>
+
+    <!-------------------------------------------------------------------------------->
+
+      <h3>2.4 Multiresolution Blending</h3>
+      <p>
+        Using the stacks built in Part 2.3, I implemented multiresolution 
+        blending. This algorithm smooths the seam between two images by 
+        blending their lower frequencies over a wide area, while 
+        transitioning their high frequencies (like sharp edges and 
+        textures) over a very narrow area.
+      </p>
+      
+      <h4>The Classic Oraple</h4>
+      <div class="image-grid-2">
+        <figure><img src="media/part2_4_oraple_split.png" alt="Oraple Direct"><figcaption>Direct Vertical Split</figcaption></figure>
+        <figure><img src="media/part2_4_oraple_blended.png" alt="Oraple Blended"><figcaption>Multiresolution Blend</figcaption></figure>
+      </div>
+
+      <h4>Custom Blend 1: Recreating CatDog but IRL</h4>
+      <p>
+        For my first custom blend, I will recreate <a href="https://en.wikipedia.org/wiki/CatDog">CatDog from the TV show</a> using a real cat and dog.
+        <br>
+        To fully illustrate the blend, I have included an image on the left that is just a direct splitting and 
+        splicing of the two images.
+      </p>
+      <div class="image-grid-2">
+        <figure><img src="media/part2_4_catdog_split.png" alt="CatDog Split"><figcaption>Direct Split</figcaption></figure>
+        <figure><img src="media/part2_4_catdog_blended.png" alt="CatDog Blended"><figcaption>Multiresolution Blend</figcaption></figure>
+      </div>
+
+      <h4>Custom Blend 2: Shrek Wazowski (Irregular Masking)</h4>
+      <p>
+        For my final blend, I placed Shrek's face onto Mike Wazowski's body. Because their shapes are complex, 
+        a vertical split would not work. I utilised a custom irregular mask. This requires the user to manually 
+        select the points to create the mask. To ensure the highest frequency textures do not create a sharp 
+        cliff at the borders, I applied a slight Gaussian feathering to 
+        the L0 mask before building the stack.
+      </p>
+      <div class="image-grid-2-2">
+        <figure><img src="media/mike.jpg" alt="Mike"><figcaption>Mike Wazowski</figcaption></figure>
+        <figure><img src="media/shrek.jpg" alt="Shrek"><figcaption>Shrek</figcaption></figure>
+        <figure><img src="media/part2_4_irregular_mask.png" alt="Custom Drawn Mask"><figcaption>Custom Drawn Mask</figcaption></figure>
+        <figure><img src="media/part2_4_irregular_mask_blurred.png" alt="Custom Drawn Blurred Mask"><figcaption>Custom Drawn Blurred Mask</figcaption></figure>
+      </div>
+      <br>
+      <div class="image-grid-1">
+        <figure><img src="media/part2_4_Shrek_Wazowski_blended.png" alt="Shrek Wazowski"><figcaption>Shrek Wazowski</figcaption></figure>
+      </div>
+
+      <p>
+        To see the whole process of recreating this, I will show the Lapacian stack for Shrek Wazowski.
+      </p>
+      <div class="image-grid-1">
+        <figure><img src="media/part2_4_Shrek_Wazowski_stacks.png" alt="Laplacian Stack"><figcaption>Lapacian Stack</figcaption></figure>
+      </div>
+
+    </section>
+
+    <hr>
+
+    <!------------------------------------ CONCLUSION ------------------------------------>
+    <section class="part" id="conclusion">
+      <h2>The Most Important Thing I Learnt</h2>
+      <p>
+        The most important thing I learnt is that images are not just static grids of pixels, but consist of 
+        high and low frequencies that can be used to manipulate human perception.
+        <br><br>
+        By isolating these high and low frequencies using Gaussian filters and Laplacian substraction, I saw
+        how high frequencies dictate sharp edges and fine details, while low frequencies controls smooth colour 
+        gradients and overall image structure. This dual nature is what helped me make hybrid images like "Lord 
+        Squaadward" and "Tankbob" possible. By mathematically overlaying the high frequency details of one subject 
+        onto the low frequency base of the other, the resulting image is able to trick the human eye purely based 
+        on the viewing distance. 
+     </p>
     </section>
 
   </div>
