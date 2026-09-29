@@ -260,7 +260,7 @@
         From the results above, I decided to select a threshold value of 0.2. At 0.1 and 0.15, many pixels were flagged as 
         edges. This results in a lot of noise in the background. At 0.25 and above, most of the noise have been removed. 
         However, it also starts to drop edges from the cameraman and the tripod. Therefore, 0.2 was the best middle point
-        to ensure that the image while still shows the finer edges of the tripod and the outline of the cameramen. 
+        to ensure that the image while still showing the finer edges of the tripod and the outline of the cameramen. 
       </p>
 
 
@@ -270,7 +270,7 @@
     <p>
         Applying the finite difference operators directly to the original image results in noisy edges. To fix this, 
         I first blurred the image using a Gaussian filter and then applied the 
-        difference operators. I also created a derivatibe of Gaussian (DoG) 
+        difference operators. I also created a derivative of Gaussian (DoG) 
         filter by convolving the Gaussian with D_x and D_y first and verified 
         that applying it to the original image returns the same result with only 
         one convolution operation.
@@ -290,7 +290,7 @@
     </p>
     <h4>What differences do I see?</h4> 
     <div class="image-grid-2-2">
-      <figure><img src="media/part1_2_gradient_magnitude_0_2.png" alt="Threshold 0.2 " alt="Prev Grad Mag"><figcaption>Previous Gradient Magnitude</figcaption></figure>
+      <figure><img src="media/part1_2_gradient_magnitude_0_2.png" alt="Prev Grad Mag"><figcaption>Previous Gradient Magnitude</figcaption></figure>
       <figure><img src="media/part1_3_sigma_comparisons_gradient_magnitude_1.0.png" alt="New Grad Mag"><figcaption>New Gradient Magnitude</figcaption></figure>
       <figure><img src="media/part1_2_edges_0_2.png" alt="Threshold 0.2 " alt="Prev Edges"><figcaption>Previous Edges</figcaption></figure> 
       <figure><img src="media/part1_3_sigma_comparisons_edges_1.0.png" alt="New Edges"><figcaption>New Edges</figcaption></figure>       
@@ -298,7 +298,7 @@
     <p>
       From the comparisons above, the main difference that I can see is by blurring the image first is that 
       the edges are more pronounced. Additionally, the amount of noise around the bottom of the image has been 
-      completely removed. The trade-off for this is that the edges have becoem 
+      completely removed. The trade-off for this is that the edges have become 
       thicker and very fine details such as the cameraman's face are smoothed 
       away.
     </p>
@@ -309,7 +309,7 @@
       is the same as convolving the image once with a filter made by 
       combining the Gaussian and the difference operator ahead of time.
       $$(I * G) * D_x = I * (G * D_x)$$
-      I built the DoG fikters by convolving the 2D Gaussian kernel directly with 
+      I built the DoG filters by convolving the 2D Gaussian kernel directly with 
       d_x and D_y. The resulting filters act as a single operation that 
       smooths the image and extracts the gradient at the same time.
     </p>
@@ -318,21 +318,18 @@
     </div>    
 
     <h4>Verification of Results</h4>
-    <!-- <p>
-      I compared my two step pipeline with the single DoG convolution. 
-      With the zero padding used throughout Part 1, the gradient images 
-      agree over the interior of the image to within the floating point 
-      rounding with a maximum difference of _____ for both x and y. 
-    </p> -->
     <p>
       To verify that the single DoG convolution produces the same result as the two-step process 
-      (blurring, then computing the difference), I compared their outputs. Due to boundary padding 
-      artifacts skewing the maximum gradient values at the extreme edges, I normalised 
-      both images using only their interior pixels. 
+      (blurring, then computing the difference), I compared their outputs using symmetric 
+      boundary padding for every convolution involved rather than zero padding. 
+      With zero padding, the two routes disagrees at the image border since 
+      zero padding is applied once for the DoG route but twice for the two 
+      step route. With symmetric padding, this discrepancy disappears 
+      entirely, causing the two routes to agree over the whole image.
       <br><br>
-      As shown below, the binary edge maps are identical, differing in 0.0% of the interior 
+      As shown below, the binary edge maps are identical, differing in 0.00000% of
       pixels. The raw gradient magnitude arrays had a maximum difference of 7.77e-16, which is strictly 
-      limited to floating-point machine precision.
+      limited to floating-point noise, confirming (I * G) * D_x = I * (G * D_x).
     </p>
     <div class="image-grid-1">
       <figure><img src="media/part1_3_DoG_verification.png" alt="Verification"><figcaption>Verification</figcaption></figure>
@@ -359,7 +356,7 @@
       </div>
       
       <p>
-        To determine the best alpha for sharpening, I interated through a series of alphas. The results are display 
+        To determine the best alpha for sharpening, I iterated through a series of alphas. The results are display 
         below.
       </p>
       <div class="image-grid-2-2">
@@ -391,9 +388,9 @@
         <figure><img src="media/part2_1_resharpened_image.png" alt="Resharpened"><figcaption>Resharpened</figcaption></figure>
       </div>
       <p>
-        The unsharp masking amplifies the frequecy content that survived the blurring. However, it is unable to recover 
+        The unsharp masking amplifies the frequency content that survived the blurring. However, it is unable to recover 
         destroyed details. Once the fine textures are averaged away by the Gaussian, no amount of high frequency boosting 
-        can recover it. Hence, this explains why the resharpened image looks blurrer than the original sharp image.
+        can recover it. Hence, this explains why the resharpened image looks blurrier than the original sharp image.
       </p>
     <!-------------------------------------------------------------------------------->
 
@@ -434,13 +431,13 @@
         a blurred Nutmeg. A larger σ2 removes on the lowest frequencies, so 
         more of its details are passed through.<br>
         <br>
-        A small σ1 leave too much of Derek's fine features that competes with 
+        A small σ1 leaves too much of Derek's fine features that competes with 
         Nutmeg's details up close, while having too large of a σ1 turns him 
         into a shapeless blur that is hard to recognise at far distances. A 
         small σ2 leaves too little of Nutmeg to see up close, while a large σ2 
-        lets too much of its structure thorugh that she dominates the image 
+        lets too much of its structure through that she dominates the image 
         even at a far distance. For Derek and Nutmeg, I chose σ1 = 12 and σ2 = 8 
-        as the it gave the best balance between the two. For the two other 
+        as it gave the best balance between the two. For the two other 
         examples, I followed this same procedure, but will not be showing 
         this grid.
       </p>
@@ -459,7 +456,7 @@
         For this hybrid image, I used sigma1 = 3 and sigma2 = 4.
       </p>
       <div class="image-grid-3">
-        <figure><img src="media/part2_2_im1_aligned_lord_squaadward.png" alt="Faaquaad Aligned"><figcaption>Faaquaad Aligned</figcaption></figure>
+        <figure><img src="media/part2_2_im1_aligned_lord_squaadward.png" alt="Farquaad Aligned"><figcaption>Farquaad Aligned</figcaption></figure>
         <figure><img src="media/part2_2_im2_aligned_lord_squaadward.png" alt="Squidward Aligned"><figcaption>Squidward Aligned</figcaption></figure>
         <figure><img src="media/part2_2_hybrid_lord_squaadward.png" alt="Lord Squaadward Hybrid"><figcaption>Lord Squaadward Hybrid</figcaption></figure>
       </div>
@@ -489,7 +486,7 @@
       </div>
 
       <div class="highlight">
-        <strong>Frequency Analysis (Fourier Transforms): (TO DO: USE THIS FOR EITHER SQUAIDWARD OR SPONGEBOB)</strong>
+        <strong>Frequency Analysis (Fourier Transforms):</strong>
         <p>Below are the 2D Fourier transforms showing the frequency domain at each step of the process. You can see the high-pass filter leaving only the outer perimeter (high frequencies) and the low-pass filter leaving only the bright center (low frequencies).</p>
       </div>
       <div class="image-grid-5-2">
@@ -502,12 +499,12 @@
         <figure><img src="media/part2_2_im1_aligned_tankbob_fft.png" alt="Tank Cat FFT"><figcaption>Tank Cat FFT</figcaption></figure>
         <figure><img src="media/part2_2_low_freq_tankbob_fft.png" alt="Tank Cat Low Pass FFT"><figcaption>T-Cat Low Pass FFT</figcaption></figure>
         <figure><img src="media/part2_2_im2_aligned_tankbob_fft.png" alt="Spongebob FFT"><figcaption>Spongebob FFT</figcaption></figure>
-        <figure><img src="media/part2_2_high_freq_tankbob_fft.png" alt="Spongebob Low Pass FFT"><figcaption>S-bob High Pass FFT</figcaption></figure>
+        <figure><img src="media/part2_2_high_freq_tankbob_fft.png" alt="Spongebob High Pass FFT"><figcaption>S-bob High Pass FFT</figcaption></figure>
         <figure><img src="media/part2_2_hybrid_tankbob_fft.png" alt="Hybrid FFT"><figcaption>Hybrid FFT</figcaption></figure>
       </div>
       <p>
         The log magnitude of the 2D fourier Transform shows how the 
-        filters isolates specific frequencies. The low passed Tank Cat 
+        filters isolate specific frequencies. The low passed Tank Cat 
         spectrum has its energy tightly concentrated at the center and 
         fades to black towards the edges since the high frequencies 
         have been filtered out. However, the high passed Spongebob 
@@ -565,7 +562,7 @@
         <figure><img src="media/part2_4_catdog_blended.png" alt="CatDog Blended"><figcaption>Multiresolution Blend</figcaption></figure>
       </div>
 
-      <h4>Custom Blend 2: Shrek Wazowski (Irregular Masking)</h4>
+      <h4>Custom Blend 2: Shrek Wazowski (Irregular Masking) (Favourite)</h4>
       <p>
         For my final blend, I placed Shrek's face onto Mike Wazowski's body. Because their shapes are complex, 
         a vertical split would not work. I utilised a custom irregular mask. This requires the user to manually 
@@ -602,8 +599,8 @@
         The most important thing I learnt is that images are not just static grids of pixels, but consist of 
         high and low frequencies that can be used to manipulate human perception.
         <br><br>
-        By isolating these high and low frequencies using Gaussian filters and Laplacian substraction, I saw
-        how high frequencies dictate sharp edges and fine details, while low frequencies controls smooth colour 
+        By isolating these high and low frequencies using Gaussian filters and Laplacian subtraction, I saw
+        how high frequencies dictate sharp edges and fine details, while low frequencies control smooth colour 
         gradients and overall image structure. This dual nature is what helped me make hybrid images like "Lord 
         Squaadward" and "Tankbob" possible. By mathematically overlaying the high frequency details of one subject 
         onto the low frequency base of the other, the resulting image is able to trick the human eye purely based 
