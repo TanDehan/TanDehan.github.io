@@ -318,9 +318,25 @@
     </div>    
 
     <h4>Verification of Results</h4>
+    <!-- <p>
+      I compared my two step pipeline with the single DoG convolution. 
+      With the zero padding used throughout Part 1, the gradient images 
+      agree over the interior of the image to within the floating point 
+      rounding with a maximum difference of _____ for both x and y. 
+    </p> -->
     <p>
-
+      To verify that the single DoG convolution produces the same result as the two-step process 
+      (blurring, then computing the difference), I compared their outputs. Due to boundary padding 
+      artifacts skewing the maximum gradient values at the extreme edges, I normalised 
+      both images using only their interior pixels. 
+      <br><br>
+      As shown below, the binary edge maps are identical, differing in 0.0% of the interior 
+      pixels. The raw gradient magnitude arrays had a maximum difference of 7.77e-16, which is strictly 
+      limited to floating-point machine precision.
     </p>
+    <div class="image-grid-1">
+      <figure><img src="media/part1_3_DoG_verification.png" alt="Verification"><figcaption>Verification</figcaption></figure>
+    </div>
 
     </section>
 
@@ -476,9 +492,6 @@
         <strong>Frequency Analysis (Fourier Transforms): (TO DO: USE THIS FOR EITHER SQUAIDWARD OR SPONGEBOB)</strong>
         <p>Below are the 2D Fourier transforms showing the frequency domain at each step of the process. You can see the high-pass filter leaving only the outer perimeter (high frequencies) and the low-pass filter leaving only the bright center (low frequencies).</p>
       </div>
-      <p>
-        The low passed image spectrun concentrates almost all
-      </p>
       <div class="image-grid-5-2">
         <figure><img src="media/part2_2_im1_aligned_tankbob.png" alt="Tank Cat"><figcaption>Tank Cat</figcaption></figure>
         <figure><img src="media/part2_2_im1_low_freq_tankbob.png" alt="Tank Cat Low Pass"><figcaption>Tank Cat Low Pass</figcaption></figure>
@@ -492,6 +505,17 @@
         <figure><img src="media/part2_2_low_freq_tankbob_fft.png" alt="Spongebob Low Pass FFT"><figcaption>S-bob Low Pass FFT</figcaption></figure>
         <figure><img src="media/part2_2_hybrid_tankbob_fft.png" alt="Hybrid FFT"><figcaption>Hybrid FFT</figcaption></figure>
       </div>
+      <p>
+        The log magnitude of the 2D fourier Transform shows how the 
+        filters isolates specific frequencies. The low passed Tank Cat 
+        spectrum has its energy tightly concentrated at the center and 
+        fades to black towards the edges since the high frequencies 
+        have been filtered out. However, the high passed Spongebob 
+        spectrum has a dark center since the low frequency structure 
+        was removed, and is bright everywhere else. The hybrid spectrum 
+        combines both the low frequency core from the Tank Cat and the high 
+        frequency spread from Spongebob.
+      </p>
 
     <!-------------------------------------------------------------------------------->
 
