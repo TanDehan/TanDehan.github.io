@@ -36,13 +36,11 @@ table.mse{border-collapse:collapse;margin:10px auto}table.mse th,table.mse td{pa
           <div class="part-head">
 <h2>Overview</h2>
 <p>Part A uses a pretrained text-to-image flow model, 
-      <b>PixNerd-XXL-P16-T2I</b>, to denoise, generate and edit images. No training is involved: 
-      everything is a sampling procedure built on the model's velocity prediction 
+      to denoise, generate and edit images. No training is involved.
+      Everything is a sampling procedure built on the model's velocity prediction 
       <i>ṽ(x<sub>t</sub>, t, c)</i>. All results use seed 180, Euler step size 
-      <i>h</i> = 0.02 and, where guidance is used, CFG weight <i>w</i> = 7 (float32, run on a Colab T4). 
-      Click any image to view it full size.
+      <i>h</i> = 0.02 and, where guidance is used, CFG weight <i>w</i> = 7. 
     </p>
-<p>I use my own photo of the Palace of Fine Arts for Sections 1.1–1.5.</p>
 </div>
         </section>
         <section class="part" id="s11">
@@ -51,7 +49,7 @@ table.mse{border-collapse:collapse;margin:10px auto}table.mse th,table.mse td{pa
             <p class="eq">x<sub>t</sub> = (1 − t)·ε + t·x<sub>1</sub>,  ε ~ N(0, I)</p>
             <p>
 <code>interpolate</code> scales the image by <i>t</i> and the noise by (1−<i>t</i>), so <i>t</i>=0 is pure noise and 
-      <i>t</i>=1 is the clean image (both endpoints are asserted exactly in the notebook). One noise tensor is sampled and reused 
+      <i>t</i>=1 is the clean image. One noise tensor is sampled and reused 
       for every time.
     </p>
             <figure class="">
@@ -68,8 +66,8 @@ table.mse{border-collapse:collapse;margin:10px auto}table.mse th,table.mse td{pa
           <div class="part-head">
             <h2>1.2 Classical Denoising</h2>
             <p class="eq">x̂<sub>1</sub> = G<sub>σ</sub> ∗ (x<sub>t</sub> / t)</p>
-            <p>Dividing by <i>t</i> restores the image amplitude (it does not remove noise); the Gaussian blur then averages 
-      noise away. For each time I tried σ ∈ {1, 2, 4, 8, 16} and kept the one with the lowest MSE against the 
+            <p>Dividing by <i>t</i> restores the image amplitude (it does not remove noise). The Gaussian blur then averages 
+      noise away. For each time, I tried σ ∈ {1, 2, 4, 8, 16} and kept the one with the lowest MSE against the 
       original, so this baseline is a best case that uses the ground truth. The chosen values were σ = 8, 4 and 1 for 
       t = 0.25, 0.50, 0.75.
     </p>
@@ -146,7 +144,7 @@ table.mse{border-collapse:collapse;margin:10px auto}table.mse th,table.mse td{pa
           <div class="part-head">
             <h2>1.5 Iterative Denoising with Euler Sampling</h2>
             <p class="eq">x<sub>t+h</sub> = x<sub>t</sub> + h·ṽ(x<sub>t</sub>, t, c)</p>
-            <p>Starting from the saved t = 0.50 noisy image, 25 Euler steps of <i>h</i> = 0.02 with the velocity recomputed after each step. The notebook also checks constant-velocity fields analytically (50 steps from 0, 25 from 0.5, and a shortened final step from 0.93).</p>
+            <p>Starting from the saved t = 0.50 noisy image, 25 Euler steps of <i>h</i> = 0.02 with the velocity recomputed after each step. It also checks constant-velocity fields analytically (50 steps from 0, 25 from 0.5, and a shortened final step from 0.93).</p>
             <figure class="">
               <div class="frame"><a href="media/trajectory.png" target="_blank" rel="noopener"><img src="media/trajectory.png" alt="Initial state, every fifth update, and final image (t = 0.50 to 1.00)" loading="lazy"></a></div>
               <figcaption>Initial state, every fifth update, and final image (t = 0.50 to 1.00)</figcaption>
@@ -191,7 +189,7 @@ table.mse{border-collapse:collapse;margin:10px auto}table.mse th,table.mse td{pa
           <div class="part-head">
             <h2>2.1 Classifier-Free Guidance</h2>
             <p class="eq">v<sub>cfg</sub> = v<sub>c</sub> + w·(v<sub>c</sub> − v<sub>u</sub>),  w = 7</p>
-            <p>Both predictions use the same <i>x<sub>t</sub></i> and <i>t</i>; the unconditional branch uses the empty prompt. <i>w</i> = 0 reproduces the conditional prediction exactly (checked in the notebook). Same five seeds as 1.6.</p>
+            <p>Both predictions use the same <i>x<sub>t</sub></i> and <i>t</i>; the unconditional branch uses the empty prompt. <i>w</i> = 0 reproduces the conditional prediction exactly. Same five seeds as 1.6.</p>
             <figure class="">
               <div class="frame"><a href="media/cfg_samples.png" target="_blank" rel="noopener"><img src="media/cfg_samples.png" alt="CFG samples, w = 7 (seeds 180&amp;ndash;184)" loading="lazy"></a></div>
               <figcaption>CFG samples, w = 7 (seeds 180–184)</figcaption>
@@ -202,12 +200,12 @@ table.mse{border-collapse:collapse;margin:10px auto}table.mse th,table.mse td{pa
         <section class="part" id="s31">
           <div class="part-head">
             <h2>3.1 Image-to-Image Editing</h2>
-            <p>SDEdit-style editing: noise the image to time <i>t</i><sub>start</sub>, then denoise with CFG (<i>w</i> = 7) from there using “a high quality photo”. Starting times run from most noise (t = 0.02) to least (t = 0.50).</p>
+            <p>SDEdit-style editing: noise the image to time <i>t</i><sub>start</sub>, then denoise with CFG (<i>w</i> = 7) from there using a high quality photo. Starting times run from most noise (t = 0.02) to least (t = 0.50).</p>
             <figure class="">
               <div class="frame"><a href="media/edit_campanile.png" target="_blank" rel="noopener"><img src="media/edit_campanile.png" alt="Campanile" loading="lazy"></a></div>
               <figcaption>Campanile</figcaption>
             </figure>
-            <p>At t = 0.02 only a pale column against blue sky survives. The tower sharpens as t grows, but the belfry arches and clock only come back at t ≥ 0.25.</p>
+            <p>At t = 0.02 only a pale column against blue sky survives. The tower sharpens as t grows, but the tower details and clock only come back at t ≥ 0.25.</p>
             <figure class="">
               <div class="frame"><a href="media/edit_my_image_1.png" target="_blank" rel="noopener"><img src="media/edit_my_image_1.png" alt="My image 1: Palace of Fine Arts" loading="lazy"></a></div>
               <figcaption>My image 1: Palace of Fine Arts</figcaption>
@@ -233,7 +231,7 @@ table.mse{border-collapse:collapse;margin:10px auto}table.mse th,table.mse td{pa
               <div class="frame"><a href="media/edit_drawing_1.png" target="_blank" rel="noopener"><img src="media/edit_drawing_1.png" alt="Hand drawing 1 (SpongeBob)" loading="lazy"></a></div>
               <figcaption>Hand drawing 1 (SpongeBob)</figcaption>
             </figure>
-            <p>At t = 0.02–0.04 the white rectangle becomes a white appliance. At 0.06 the face and smile survive but the rest is lost, and from 0.10 the line drawing returns with small changes. It never becomes photographic.</p>
+            <p>At t = 0.02–0.04 the white rectangle becomes a white appliance. At 0.06 the face and smile survive but the rest is lost, and from 0.10 the line drawing returns with small changes. At 0.50, it has returned to the original drawing.</p>
             <figure class="">
               <div class="frame"><a href="media/edit_drawing_2.png" target="_blank" rel="noopener"><img src="media/edit_drawing_2.png" alt="Hand drawing 2 (Patrick)" loading="lazy"></a></div>
               <figcaption>Hand drawing 2 (Patrick)</figcaption>
@@ -249,7 +247,7 @@ table.mse{border-collapse:collapse;margin:10px auto}table.mse th,table.mse td{pa
               <div class="frame"><a href="media/text_edit_campanile.png" target="_blank" rel="noopener"><img src="media/text_edit_campanile.png" alt="Campanile &amp;rarr; &amp;ldquo;a photograph of an ice popsicle&amp;rdquo;" loading="lazy"></a></div>
               <figcaption>Campanile → “a photograph of an ice popsicle”</figcaption>
             </figure>
-            <p>A popsicle at t ≤ 0.06. At 0.10–0.14 the tower's framing, sky and trees are kept, but its body becomes pink with a blue-green top. The tower returns with only a pink tint at 0.25.</p>
+            <p>A popsicle at t ≤ 0.06. At 0.10–0.14 the tower's framing, sky and trees are kept, but its body becomes pink with a green top with the texture of a popsicle. The tower returns with only a pink tint at 0.25 and some missing details.</p>
             <figure class="">
               <div class="frame"><a href="media/text_edit_my_image_1.png" target="_blank" rel="noopener"><img src="media/text_edit_my_image_1.png" alt="My image 1 &amp;rarr; &amp;ldquo;a photograph of the Colosseum&amp;rdquo;" loading="lazy"></a></div>
               <figcaption>My image 1 → “a photograph of the Colosseum”</figcaption>
@@ -271,12 +269,12 @@ table.mse{border-collapse:collapse;margin:10px auto}table.mse th,table.mse td{pa
               <div class="frame"><a href="media/anagram_views_0.png" target="_blank" rel="noopener"><img src="media/anagram_views_0.png" alt="Upright: &amp;ldquo;a drawing of a frog sitting on a lilypad&amp;rdquo; &amp;nbsp;|&amp;nbsp; rotated: &amp;ldquo;a drawing of the head of a horse&amp;rdquo;" loading="lazy"></a></div>
               <figcaption>Upright: “a drawing of a frog sitting on a lilypad”  |  rotated: “a drawing of the head of a horse”</figcaption>
             </figure>
-            <p>The wealthy looking man's shirt becomes the hair, and his smart hat becomes the shirt.</p>
+            <p>The legs of the frog becomes the mane of the horse and the frog's eyes becomes the nostrils of the horse.</p>
             <figure class="">
               <div class="frame"><a href="media/anagram_views_1.png" target="_blank" rel="noopener"><img src="media/anagram_views_1.png" alt="Upright: &amp;ldquo;a painting of a smug, wealthy looking man with a smart hat&amp;rdquo; &amp;nbsp;|&amp;nbsp; rotated: &amp;ldquo;a painting of an angry, scowling man&amp;rdquo;" loading="lazy"></a></div>
               <figcaption>Upright: “a painting of a smug, wealthy looking man with a smart hat”  |  rotated: “a painting of an angry, scowling man”</figcaption>
             </figure>
-            <p>The horse's head and neck double as the village roofs, and its body as the mountain slope.</p>
+            <p>The wealthy looking man's shirt becomes the hair, and his smart hat becomes the shirt.</p>
           </div>
         </section>
         <section class="part" id="s34">
@@ -304,7 +302,7 @@ table.mse{border-collapse:collapse;margin:10px auto}table.mse th,table.mse td{pa
                 <figcaption>Distant view, 64×64</figcaption>
               </figure>
             </div>
-            <p>Up close, both read clearly as the houseplants prompt. The distant prompt is only weakly visible: when shrunk, what carries over from the low-frequency prompt is mainly the overall color layout (the warm orange and brown tones and the large dark mass in the first), not a clearly recognizable animal. I consider this a partial result.</p>
+            <p>Up close, both read clearly as the houseplants prompt. At distance, we can also make out features of the red panda and the quokka.</p>
           </div>
         </section>
         <section class="part" id="partb">
