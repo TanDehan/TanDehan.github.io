@@ -226,17 +226,17 @@ table.mse{border-collapse:collapse;margin:10px auto}table.mse th,table.mse td{pa
               <div class="frame"><a href="media/edit_web_image.png" target="_blank" rel="noopener"><img src="media/edit_web_image.png" alt="Web image (Squidward)" loading="lazy"></a></div>
               <figcaption>Web image (Squidward)</figcaption>
             </figure>
-            <p>From t = 0.02 to 0.06 the smooth teal oval and warm background are read as a phone held in a hand. At 0.10–0.14 the face returns as a plausible but different character (flatter, with the lips and some color lost), and by 0.50 it is almost unchanged.</p>
+            <p>From t = 0.02 to 0.06, Handsome Squidward and the bright background are read as a phone held in a hand. At 0.10–0.14 the face returns as a plausible but different character (flatter, with the lips and some color lost), and by 0.50 it is almost unchanged.</p>
             <figure class="">
               <div class="frame"><a href="media/edit_drawing_1.png" target="_blank" rel="noopener"><img src="media/edit_drawing_1.png" alt="Hand drawing 1 (SpongeBob)" loading="lazy"></a></div>
               <figcaption>Hand drawing 1 (SpongeBob)</figcaption>
             </figure>
-            <p>At t = 0.02–0.04 the white rectangle becomes a white appliance. At 0.06 the face and smile survive but the rest is lost, and from 0.10 the line drawing returns with small changes. At 0.50, it has returned to the original drawing.</p>
+            <p>At t = 0.02–0.04 the drawing of SpongeBob becomes a white appliance. At 0.06 the face and smile survive but the rest is lost, and from 0.10 the line drawing returns with small changes. At 0.50, it has returned to the original drawing.</p>
             <figure class="">
               <div class="frame"><a href="media/edit_drawing_2.png" target="_blank" rel="noopener"><img src="media/edit_drawing_2.png" alt="Hand drawing 2 (Patrick)" loading="lazy"></a></div>
               <figcaption>Hand drawing 2 (Patrick)</figcaption>
             </figure>
-            <p>The pale star body is read as a cup, then a paper-towel roll with a blue top (t = 0.04), then a star with blue patches (0.06). From t = 0.10 it is back to line art with only slight changes.</p>
+            <p>The drawing of Patrick is read as a cup, then a paper-towel roll with a blue top (t = 0.04), then a star with blue patches (0.06). From t = 0.10 it is back to line art with only slight changes.</p>
           </div>
         </section>
         <section class="part" id="s32">
@@ -306,7 +306,7 @@ table.mse{border-collapse:collapse;margin:10px auto}table.mse th,table.mse td{pa
           </div>
         </section>
         <section class="part" id="partb">
-          <div class="part-head"><h2>Part B: Flow Matching from Scratch</h2><p>In Part B I train my own flow-matching models on MNIST instead of using a pretrained one. I first build a one-step denoising UNet (Part 1) and see why it fails as a generator, then train a UNet to predict the flow from noise to data and sample by iterative Euler integration (Part 2), first conditioned on time only and then on time and digit class with classifier-free guidance. Every run uses seed 180, Adam, and float32 with TF32 matmuls on a Colab T4. Click any image to view it full size.</p><p>Architecture: the UNet follows the assignment diagram. Simple ops are <code>Conv</code> (3×3, stride 1), <code>DownConv</code> (3×3, stride 2), <code>UpConv</code> (<code>ConvTranspose2d</code> 4, 2, 1), <code>Flatten</code> (7×7 average pool) and <code>Unflatten</code> (<code>ConvTranspose2d</code> 7, 7, 0), each followed by BatchNorm and GELU where specified. <code>ConvBlock</code>, <code>DownBlock</code> and <code>UpBlock</code> are built from them. Two downsampling blocks take the 28×28 input to 7×7, a pooled 1×1 bottleneck is unflattened back to 7×7, and skip connections are concatenated at each resolution. <i>D</i> is the hidden width: 128 for the single-step denoiser and 64 for the flow-matching models.</p></div>
+          <div class="part-head"><h2>Part B: Flow Matching from Scratch</h2><p>In Part B I train my own flow-matching models on MNIST instead of using a pretrained one. I first build a one-step denoising UNet (Part 1) and see why it fails as a generator, then train a UNet to predict the flow from noise to data and sample by iterative Euler integration (Part 2), first conditioned on time only and then on time and digit class with classifier-free guidance. Every run uses seed 180, Adam, and float32 with TF32 matmuls on a Colab T4.</p><p>Architecture: the UNet follows the assignment diagram. Simple ops are <code>Conv</code> (3×3, stride 1), <code>DownConv</code> (3×3, stride 2), <code>UpConv</code> (<code>ConvTranspose2d</code> 4, 2, 1), <code>Flatten</code> (7×7 average pool) and <code>Unflatten</code> (<code>ConvTranspose2d</code> 7, 7, 0), each followed by BatchNorm and GELU where specified. <code>ConvBlock</code>, <code>DownBlock</code> and <code>UpBlock</code> are built from them. Two downsampling blocks take the 28×28 input to 7×7, a pooled 1×1 bottleneck is unflattened back to 7×7, and skip connections are concatenated at each resolution. <i>D</i> is the hidden width: 128 for the single-step denoiser and 64 for the flow-matching models.</p></div>
         </section>
         <section class="part" id="b-s12">
           <div class="part-head">
