@@ -1,0 +1,1 @@
+Cylinder focal length = 0.702 x image width (702 px at width 1000); translation-fit RMS residual = 4.37 px
