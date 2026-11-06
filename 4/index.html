@@ -77,6 +77,29 @@
     }
     details[open] summary { margin-bottom: 12px; }
     .fill { background: #fff3bf; padding: 0 6px; border-radius: 4px; }
+    /* Hover-to-enlarge for the manual vs. automatic comparison */
+    .zoom-grid figure { position: relative; margin: 0; }
+    .zoom-grid figure:hover { z-index: 20; }
+    .zoom-grid img {
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      cursor: zoom-in;
+      position: relative;
+    }
+    .zoom-grid figure:first-child img { transform-origin: left center; }
+    .zoom-grid figure:last-child img { transform-origin: right center; }
+    .zoom-grid figure:hover img {
+      transform: scale(1.5);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+    }
+    @media (max-width: 640px) {
+      .zoom-grid figure:hover img { transform: none; box-shadow: none; }
+    }
+    .hero{
+      text-align: left;
+      max-width: 1000px;
+      margin: 0 0 8px;
+      animation: rise 0.7s ease-out both;
+    }
   </style>
 
   <script>
@@ -771,6 +794,462 @@ def cylindricalWarp(im, f):
   <figure><img src="media/cyl_set2.png" alt="Cylindrical mosaic"><figcaption>Cylindrical mosaic</figcaption></figure>
 </div>
     </section>
+    <hr>
+
+
+    <!----------------------------------------- PART B ----------------------------------------->
+    <header class="hero" id="partb">
+      <h1>Project 4B: Feature Matching for Autostitching</h1>
+    </header>
+
+<p>
+      In Part A, every correspondence was clicked by hand. In Part B, the computer finds them.
+    <div class="highlight">
+      <strong>Implementation notes:</strong>
+      <p>
+        I use the same three photo sets as Part A, downscaled to a longest side of 1000 px. Points are still (x, y) = (column, row). Only the source of the
+        correspondences changes: the warping (<code>_warp</code>, bilinear), the two-band blending (<code>build_mosaic</code>), the least-squares
+        <code>computeH</code> from A.2, and the chaining to the middle image (<code>homographies_to_reference</code>) are the Part A functions, unchanged.
+        All of Part B is vectorized NumPy/SciPy. No feature-detection or RANSAC library is used.
+      </p>
+    </div>
+
+    <!------------------------------------ B.1 ------------------------------------>
+    <section class="part" id="b1">
+      <h2>B.1: Harris Corner Detection and ANMS</h2>
+
+      <h3>Harris corners</h3>
+      <p>
+        I convert the image to grayscale and compute the gradients \(I_x, I_y\) with derivative-of-Gaussian filters at \(\sigma_d = 1\). The products
+        \(I_x^2\), \(I_y^2\), \(I_xI_y\) are smoothed with a Gaussian at \(\sigma_i = 1.5\sigma_d\) to form the structure tensor
+        \(S = \begin{bmatrix} S_{xx} & S_{xy} \\ S_{xy} & S_{yy} \end{bmatrix}\), and the corner strength is the harmonic mean of its eigenvalues,
+        $$ f_{HM} = \frac{\det S}{\operatorname{tr} S} = \frac{\lambda_1\lambda_2}{\lambda_1 + \lambda_2}, $$
+        which is large only when <em>both</em> eigenvalues are large (a corner, not an edge). A pixel is a corner candidate if it is a 3&times;3 local maximum of \(f_{HM}\)
+        and its response is at least 1% of the strongest response in the image. As the assignment says, I use a single scale and no sub-pixel refinement.
+        Candidates within 20 px of the border are discarded so that the 40&times;40 descriptor window always fits inside the image.
+      </p>
+
+      <h3>Adaptive Non-Maximal Suppression</h3>
+      <p>
+        Simply keeping the strongest 500 corners tends to cluster them in a few high-contrast regions and leaves other regions (which may contain the overlap between two photos)
+        without any features. ANMS instead keeps corners that are strong <em>and</em> spread out. For each corner \(\mathbf{x}_i\) I compute its suppression radius,
+        the distance to the nearest corner that is significantly stronger:
+        $$ r_i = \min_{j}\; \lVert \mathbf{x}_i - \mathbf{x}_j \rVert \quad \text{s.t.} \quad f(\mathbf{x}_i) < c_{robust}\, f(\mathbf{x}_j), \qquad c_{robust} = 0.9 $$
+        and keep the 500 corners with the largest radii. The strongest corner in the image has no stronger neighbour, so its radius is infinite and it is always kept.
+        Implementation: I sort the corners by strength, so that only the corners before \(i\) in the list can dominate corner \(i\), and compute each radius with one vectorized NumPy
+        distance computation (the candidate list is capped at 10,000 corners, and the images here had 2,295 to 5,777).
+      </p>
+      <!-- <details>
+        <summary>harris_corners and anms</summary> -->
+        <div class="codebox">
+<pre><code>def harris_corners(gray, edge_discard=20):
+    h, coords = get_harris_corners(gray, edge_discard)
+    ys, xs = coords
+    strengths = h[ys, xs]
+    keep = strengths > HARRIS_THRESH_REL * h.max()
+    ys, xs, strengths = ys[keep], xs[keep], strengths[keep]
+    order = np.argsort(-strengths)[:MAX_CANDIDATES]
+
+    return h, np.c_[xs, ys][order].astype(float), strengths[order]
+
+
+def anms(pts, strengths, n_keep, c_robust=C_ROBUST, chunk=500):
+    order = np.argsort(-strengths)
+    pts, s = pts[order], strengths[order]
+    n = len(s)
+    radii = np.full(n, np.inf)
+
+    for i0 in range(0, n, chunk):
+        i1 = min(n, i0 + chunk)
+        D2 = dist2(pts[i0:i1], pts[:i1])
+        dominated = c_robust * s[None, :i1] > s[i0:i1, None]
+        radii[i0:i1] = np.where(dominated, D2, np.inf).min(axis=1)
+    keep = np.argsort(-radii, kind="stable")[:n_keep]
+
+    return pts[keep], s[keep]</code></pre>
+        </div>
+      </details>
+
+      <h3>Results</h3>
+      <p>
+        Each figure shows (left) all Harris corners, (middle) the 500 strongest corners <em>without</em> ANMS, and (right) the 500 corners chosen <em>with</em> ANMS.
+      </p>
+      <div class="scroll">
+      <table class="results-table">
+        <thead>
+          <tr><th>Set</th><th>Image</th><th>Harris corners detected</th><th>Kept after ANMS</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td>1</td><td>6041</td><td>500</td></tr>
+          <tr><td>1</td><td>2</td><td>5474</td><td>500</td></tr>
+          <tr><td>1</td><td>3</td><td>5471</td><td>500</td></tr>
+          <tr><td>2</td><td>1</td><td>10000</td><td>500</td></tr>
+          <tr><td>2</td><td>2</td><td>10000</td><td>500</td></tr>
+          <tr><td>2</td><td>3</td><td>9952</td><td>500</td></tr>
+          <tr><td>3</td><td>1</td><td>3913</td><td>500</td></tr>
+          <tr><td>3</td><td>2</td><td>4447</td><td>500</td></tr>
+          <tr><td>3</td><td>3</td><td>3413</td><td>500</td></tr>
+        </tbody>
+      </table>
+      </div>
+
+      <h4>Set 1, Image 1</h4>
+      <div class="image-grid-1">
+  <figure><img src="media/mosaic1_img0_corners.png" alt="Set 1, image 1: Harris corners, strongest 500 without ANMS, and ANMS"><figcaption>Set 1, Image 1: all Harris corners (left), strongest 500 without ANMS (middle), and 500 corners chosen by ANMS (right)</figcaption></figure>
+</div>
+      <h4>Set 1, Image 2</h4>
+      <div class="image-grid-1">
+  <figure><img src="media/mosaic1_img1_corners.png" alt="Set 1, image 2: Harris corners, strongest 500 without ANMS, and ANMS"><figcaption>Set 1, Image 2: all Harris corners (left), strongest 500 without ANMS (middle), and 500 corners chosen by ANMS (right)</figcaption></figure>
+</div>
+      <h4>Set 1, Image 3</h4>
+      <div class="image-grid-1">
+  <figure><img src="media/mosaic1_img2_corners.png" alt="Set 1, image 3: Harris corners, strongest 500 without ANMS, and ANMS"><figcaption>Set 1, Image 3: all Harris corners (left), strongest 500 without ANMS (middle), and 500 corners chosen by ANMS (right)</figcaption></figure>
+</div>
+
+
+      <h4>Set 2, Image 1</h4>
+      <div class="image-grid-1">
+  <figure><img src="media/mosaic2_img0_corners.png" alt="Set 2, image 1: Harris corners, strongest 500 without ANMS, and ANMS"><figcaption>Set 2, Image 1: all Harris corners (left), strongest 500 without ANMS (middle), and 500 corners chosen by ANMS (right)</figcaption></figure>
+</div>
+      <h4>Set 2, Image 2</h4>
+      <div class="image-grid-1">
+  <figure><img src="media/mosaic2_img1_corners.png" alt="Set 2, image 2: Harris corners, strongest 500 without ANMS, and ANMS"><figcaption>Set 2, Image 2: all Harris corners (left), strongest 500 without ANMS (middle), and 500 corners chosen by ANMS (right)</figcaption></figure>
+</div>
+      <h4>Set 2, Image 3</h4>
+      <div class="image-grid-1">
+  <figure><img src="media/mosaic2_img2_corners.png" alt="Set 2, image 3: Harris corners, strongest 500 without ANMS, and ANMS"><figcaption>Set 2, Image 3: all Harris corners (left), strongest 500 without ANMS (middle), and 500 corners chosen by ANMS (right)</figcaption></figure>
+</div>
+
+
+      <h4>Set 3, Image 1</h4>
+      <div class="image-grid-1">
+  <figure><img src="media/mosaic3_img0_corners.png" alt="Set 3, image 1: Harris corners, strongest 500 without ANMS, and ANMS"><figcaption>Set 3, Image 1: all Harris corners (left), strongest 500 without ANMS (middle), and 500 corners chosen by ANMS (right)</figcaption></figure>
+</div>
+      <h4>Set 3, Image 2</h4>
+      <div class="image-grid-1">
+  <figure><img src="media/mosaic3_img1_corners.png" alt="Set 3, image 2: Harris corners, strongest 500 without ANMS, and ANMS"><figcaption>Set 3, Image 2: all Harris corners (left), strongest 500 without ANMS (middle), and 500 corners chosen by ANMS (right)</figcaption></figure>
+</div>
+      <h4>Set 3, Image 3</h4>
+      <div class="image-grid-1">
+  <figure><img src="media/mosaic3_img2_corners.png" alt="Set 3, image 3: Harris corners, strongest 500 without ANMS, and ANMS"><figcaption>Set 3, Image 3: all Harris corners (left), strongest 500 without ANMS (middle), and 500 corners chosen by ANMS (right)</figcaption></figure>
+</div>
+    </section>
+
+    <hr>
+
+    <!------------------------------------ B.2 ------------------------------------>
+    <section class="part" id="b2">
+      <h2>B.2: Feature Descriptor Extraction</h2>
+      <p>
+        For every ANMS corner I build a descriptor in three steps:
+      </p>
+      <ol>
+        <li><strong>Blur.</strong> The grayscale image is blurred with a Gaussian (\(\sigma = 2.5\) px).</li>
+        <li><strong>Sample.</strong> From the 40&times;40 window centered on the corner, I take an 8&times;8 grid of samples with a spacing of 5 px
+          (offsets \(-17.5, -12.5, \dots, +17.5\) in each direction, read with bilinear interpolation). Sampling a coarse grid from a <em>blurred</em> window, rather than
+          shrinking an 8&times;8 crop, gives a large, smooth descriptor that tolerates small localization errors and the mild perspective change between the photos, and the blur
+          prevents aliasing when subsampling by a factor of 5.</li>
+        <li><strong>Bias/gain normalize.</strong> Each 64-vector \(p\) is replaced by \(d = (p - \mu)/\sigma\), where \(\mu\) and \(\sigma\) are its mean and standard deviation.
+          This makes the descriptor invariant to affine changes in intensity \(I' = aI + b\), such as exposure differences between shots.</li>
+      </ol>
+      <p>
+        These descriptors are axis-aligned (no rotation invariance in the base pipeline; see B.5), and, as instructed, I skip the wavelet transform part of the descriptor section of the paper.
+      </p>
+      <!-- <details>
+        <summary>extract_descriptors</summary> -->
+        <div class="codebox">
+<pre><code>def extract_descriptors(gray, pts, rotation_invariant=False):
+    blurred = ndimage.gaussian_filter(gray, DESC_BLUR_SIGMA)
+    spacing = WINDOW / PATCH
+    offs = (np.arange(PATCH) - (PATCH - 1) / 2.0) * spacing
+    U, V = np.meshgrid(offs, offs)
+
+    if rotation_invariant:
+        gx = ndimage.gaussian_filter(gray, ORIENT_SIGMA, order=(0, 1))
+        gy = ndimage.gaussian_filter(gray, ORIENT_SIGMA, order=(1, 0))
+
+    descs = []
+
+    for x, y in pts:
+        if rotation_invariant:
+            xi, yi = int(round(x)), int(round(y))
+            th = np.arctan2(gy[yi, xi], gx[yi, xi])
+            c, s = np.cos(th), np.sin(th)
+            X, Y = x + c * U - s * V, y + s * U + c * V
+        else:
+            X, Y = x + U, y + V
+        patch = ndimage.map_coordinates(blurred, [Y, X], order=1, mode="reflect")
+        descs.append(((patch - patch.mean()) / (patch.std() + 1e-8)).ravel())
+
+    return np.array(descs)</code></pre>
+        </div>
+      </details>
+
+      <h3>Extracted features</h3>
+      <p>
+        For eight corners spread across the ANMS list of image 1 of each set, the rows show the raw 40&times;40 window, the blurred window, and the resulting normalized 8&times;8 descriptor.
+      </p>
+      <div class="image-grid-1">
+  <figure><img src="media/mosaic1_img0_descriptors.png" alt="Set 1, image 1: example descriptors"><figcaption>Set 1, image 1: 40&times;40 windows (top), blurred windows (middle), and normalized 8&times;8 descriptors (bottom)</figcaption></figure>
+  <figure><img src="media/mosaic2_img0_descriptors.png" alt="Set 2, image 1: example descriptors"><figcaption>Set 2, image 1: 40&times;40 windows, blurred windows, and normalized 8&times;8 descriptors</figcaption></figure>
+  <figure><img src="media/mosaic3_img0_descriptors.png" alt="Set 3, image 1: example descriptors"><figcaption>Set 3, image 1: 40&times;40 windows, blurred windows, and normalized 8&times;8 descriptors</figcaption></figure>
+</div>
+    </section>
+
+    <hr>
+
+    <!------------------------------------ B.3 ------------------------------------>
+    <section class="part" id="b3">
+      <h2>B.3: Feature Matching</h2>
+      <p>
+        For two neighbouring images, I compute the Euclidean distance between every descriptor of image A and every descriptor of image B (a 500 &times; 500 matrix with
+        <code>scipy.spatial.distance.cdist</code>). For each feature in A, I find its nearest neighbour (1-NN) and second nearest neighbour (2-NN) in B and accept the match only if
+        $$ \frac{d_{1\text{-}NN}}{d_{2\text{-}NN}} < 0.7. $$
+        This is the thresholding approach due to Lowe. A distinctive feature has a clearly closer best match than the runner-up (small ratio), whereas for a wrong match
+        (repeated texture, or a feature that has no counterpart in the other image) the best and second-best distances are similar and the ratio is close to 1. As Figure 6b of the paper shows,
+        thresholding this ratio separates correct from incorrect matches much better than thresholding the 1-NN distance alone, because the
+        absolute distance of a correct match varies a lot from feature to feature while the ratio adapts to how distinctive each feature is.
+        I used 0.7, a point on the trade-off between rejecting wrong matches and keeping enough correct ones (a lower threshold gives fewer, cleaner matches; a higher one gives more, noisier matches). Since RANSAC follows, I prefer
+        to keep somewhat more matches rather than too few. In practice about 91&ndash;96% of the matches that survive are RANSAC inliers (table in B.4), so this threshold works well here.
+        As instructed, I ignore Section 6 of the paper (fast matching); with only 500 features per image, the exhaustive distance matrix is cheap.
+      </p>
+      <!-- <details>
+        <summary>match_features</summary> -->
+        <div class="codebox">
+<pre><code>def match_features(d1, d2, ratio=RATIO_THRESH, cross_check=CROSS_CHECK):
+    D = np.sqrt(np.maximum(dist2(d1, d2), 0))
+    nn = np.argsort(D, axis=1)[:, :2]
+    rows = np.arange(len(d1))
+    keep = D[rows, nn[:, 0]] / (D[rows, nn[:, 1]] + 1e-12) < ratio
+
+    if cross_check:
+        keep &= np.argmin(D, axis=0)[nn[:, 0]] == rows
+
+    return np.stack([rows[keep], nn[keep, 0]], axis=1)</code></pre>
+        </div>
+      </details>
+
+      <h3>Matched features (before RANSAC)</h3>
+      <p>
+        Each yellow line joins a feature in the left image to its match in the right image. Correct matches form a coherent pattern, and the lines that break that pattern are
+        the wrong matches that RANSAC removes in B.4.
+      </p>
+
+      <h4>Set 1</h4>
+      <div class="image-grid-1">
+  <figure><img src="media/mosaic1_pair0_matches.png" alt="Set 1: matches, image 1 and image 2"><figcaption>Set 1: image 1 and image 2, 213 matches</figcaption></figure>
+  <figure><img src="media/mosaic1_pair1_matches.png" alt="Set 1: matches, image 2 and image 3"><figcaption>Set 1: image 2 and image 3, 222 matches</figcaption></figure>
+</div>
+      <h4>Set 2</h4>
+      <div class="image-grid-1">
+  <figure><img src="media/mosaic2_pair0_matches.png" alt="Set 2: matches, image 1 and image 2"><figcaption>Set 2: image 1 and image 2, 197 matches</figcaption></figure>
+  <figure><img src="media/mosaic2_pair1_matches.png" alt="Set 2: matches, image 2 and image 3"><figcaption>Set 2: image 2 and image 3, 254 matches</figcaption></figure>
+</div>
+      <h4>Set 3</h4>
+      <div class="image-grid-1">
+  <figure><img src="media/mosaic3_pair0_matches.png" alt="Set 3: matches, image 1 and image 2"><figcaption>Set 3: image 1 and image 2, 223 matches</figcaption></figure>
+  <figure><img src="media/mosaic3_pair1_matches.png" alt="Set 3: matches, image 2 and image 3"><figcaption>Set 3: image 2 and image 3, 171 matches</figcaption></figure>
+</div>
+    </section>
+
+    <hr>
+
+    <!------------------------------------ B.4 ------------------------------------>
+    <section class="part" id="b4">
+      <h2>B.4: RANSAC for a Robust Homography</h2>
+
+      <h3>4-point RANSAC (from scratch)</h3>
+      <p>
+        Least squares (A.2) is badly thrown off by even a few wrong matches, so I use RANSAC. Given the putative matches \(\{(p_i, p_i')\}\) from B.3, I repeat 5000 times:
+      </p>
+      <ol>
+        <li>Pick 4 distinct matches at random, and skip the sample if any 3 of the points in either image are (nearly) collinear, since that does not determine a homography.</li>
+        <li>Compute the exact homography \(H\) from those 4 matches (the 8&times;8 system of A.2, solved with the same <code>computeH</code>).</li>
+        <li>Apply \(H\) to the points of image A and count the matches whose reprojection error \(\lVert Hp_i - p_i' \rVert\) is below \(\varepsilon = 3\) px (the <em>inliers</em>).</li>
+        <li>Remember the \(H\) with the largest inlier set.</li>
+      </ol>
+      <p>
+        Finally, I re-estimate \(H\) by least squares over <em>all</em> inliers of the best model (the same <code>computeH</code>, now with about 200 correspondences instead of 4) and refit the
+        inlier set once with this \(H\). Parallax and moving objects produce matches that are consistent with no single homography; these are outliers like any other.
+        <br><br>
+        <strong>Number of iterations.</strong> If a fraction \(p\) of the matches are inliers, a random 4-sample is all inliers with probability \(p^4\), so \(N = \log(1 - 0.999)/\log(1 - p^4)\)
+        iterations find a good sample with 99.9% confidence. For \(p = 0.5\) this is about 107 iterations, and for \(p = 0.3\) about 850. My inlier fractions here are above 90%, so 5000 iterations is a very large safety margin, and each iteration is cheap because it only solves an 8&times;8 system.
+      </p>
+        <div class="codebox">
+<pre><code>def _collinear_triple(p, tol=1e-3):
+    scale = np.ptp(p, axis=0).max() ** 2 + 1e-12
+    for a, b, c in ((0, 1, 2), (0, 1, 3), (0, 2, 3), (1, 2, 3)):
+        u, v = p[b] - p[a], p[c] - p[a]
+        if abs(u[0] * v[1] - u[1] * v[0]) / 2 / scale < tol:
+            return True
+    return False
+
+
+def ransac_homography(p1, p2, n_iters=RANSAC_ITERS, eps=RANSAC_EPS, seed=SEED):
+    p1, p2 = np.asarray(p1, float), np.asarray(p2, float)
+    n = len(p1)
+
+    if n < 4:
+        raise ValueError("need at least 4 matches for a homography, got %d" % n)
+    rng = np.random.default_rng(seed)
+    best, best_count = None, 0
+
+    for _ in range(n_iters):
+        idx = rng.choice(n, 4, replace=False)
+        if _collinear_triple(p1[idx]) or _collinear_triple(p2[idx]):
+            continue
+        H = computeH(p1[idx], p2[idx])
+        if not np.all(np.isfinite(H)):
+            continue
+        with np.errstate(all="ignore"):
+            err = np.linalg.norm(applyH(H, p1) - p2, axis=1)
+        inl = err < eps
+        if inl.sum() > best_count:
+            best, best_count = inl, int(inl.sum())
+
+    if best is None or best_count < 4:
+        raise RuntimeError("RANSAC found no consistent homography")
+    H = computeH(p1[best], p2[best])
+    inl = np.linalg.norm(applyH(H, p1) - p2, axis=1) < eps
+
+    return (computeH(p1[inl], p2[inl]), inl) if inl.sum() >= 4 else (H, best)</code></pre>
+        </div>
+      </details>
+
+      <h3>Inliers and outliers</h3>
+      <p>
+        Green lines are the RANSAC inliers and red lines are the outliers that were rejected. In every pair the large majority of matches are inliers.
+      </p>
+      <div class="scroll">
+      <table class="results-table">
+        <thead>
+          <tr><th>Pair</th><th>Matches (ratio &lt; 0.7)</th><th>RANSAC inliers</th><th>Outliers</th><th>Inlier ratio</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Set 1, image 1 &rarr; 2</td><td>207</td><td>187</td><td>20</td><td>90.3%</td></tr>
+          <tr><td>Set 1, image 2 &rarr; 3</td><td>215</td><td>194</td><td>21</td><td>90.2%</td></tr>
+          <tr><td>Set 2, image 1 &rarr; 2</td><td>204</td><td>189</td><td>15</td><td>92.6%</td></tr>
+          <tr><td>Set 2, image 2 &rarr; 3</td><td>229</td><td>216</td><td>13</td><td>94.3%</td></tr>
+          <tr><td>Set 3, image 1 &rarr; 2</td><td>185</td><td>169</td><td>16</td><td>91.4%</td></tr>
+          <tr><td>Set 3, image 2 &rarr; 3</td><td>161</td><td>141</td><td>20</td><td>87.6%</td></tr>
+        </tbody>
+      </table>
+      </div>
+
+      <h4>Set 1</h4>
+      <div class="image-grid-1">
+  <figure><img src="media/mosaic1_pair0_ransac.png" alt="Set 1: RANSAC inliers, image 1 and image 2"><figcaption>Set 1: image 1 and image 2, 200 inliers (green) / 13 outliers (red)</figcaption></figure>
+  <figure><img src="media/mosaic1_pair1_ransac.png" alt="Set 1: RANSAC inliers, image 2 and image 3"><figcaption>Set 1: image 2 and image 3, 209 inliers (green) / 13 outliers (red)</figcaption></figure>
+</div>
+      <h4>Set 2</h4>
+      <div class="image-grid-1">
+  <figure><img src="media/mosaic2_pair0_ransac.png" alt="Set 2: RANSAC inliers, image 1 and image 2"><figcaption>Set 2: image 1 and image 2, 189 inliers (green) / 8 outliers (red)</figcaption></figure>
+  <figure><img src="media/mosaic2_pair1_ransac.png" alt="Set 2: RANSAC inliers, image 2 and image 3"><figcaption>Set 2: image 2 and image 3, 243 inliers (green) / 11 outliers (red)</figcaption></figure>
+</div>
+      <h4>Set 3</h4>
+      <div class="image-grid-1">
+  <figure><img src="media/mosaic3_pair0_ransac.png" alt="Set 3: RANSAC inliers, image 1 and image 2"><figcaption>Set 3: image 1 and image 2, 212 inliers (green) / 11 outliers (red)</figcaption></figure>
+  <figure><img src="media/mosaic3_pair1_ransac.png" alt="Set 3: RANSAC inliers, image 2 and image 3"><figcaption>Set 3: image 2 and image 3, 156 inliers (green) / 15 outliers (red)</figcaption></figure>
+</div>
+
+      <h3>Manual vs. Automatic Mosaics</h3>
+      <p>
+        For each set, the left image is the <strong>manual</strong> mosaic from Part A (8 hand-clicked correspondences per pair, least-squares homography) and the right image is the
+        <strong>automatic</strong> mosaic from Part B (Harris + ANMS + descriptors + ratio test + 4-point RANSAC; \(H\) refit on all inliers). Both use exactly the same pipeline after the
+        homographies are known: the middle photo is the reference, the images are warped with bilinear inverse warping, and they are combined with the same two-band blend. So any
+        difference between the two columns comes only from the homographies.
+      </p>
+
+      <h4>Mosaic 1: Outside of Gateway</h4>
+      <div class="image-grid-2 zoom-grid">
+  <figure><img src="media/mosaic1.png" alt="Mosaic 1, manual"><figcaption>Manual (Part A), 8 clicks per pair</figcaption></figure>
+  <figure><img src="media/mosaic1_auto.png" alt="Mosaic 1, automatic"><figcaption>Automatic (Part B), 200 and 209 inliers per pair</figcaption></figure>
+</div>
+
+      <h4>Mosaic 2: The Other Outside of Gateway</h4>
+      <div class="image-grid-2 zoom-grid">
+  <figure><img src="media/mosaic2.png" alt="Mosaic 2, manual"><figcaption>Manual (Part A), 8 clicks per pair</figcaption></figure>
+  <figure><img src="media/mosaic2_auto.png" alt="Mosaic 2, automatic"><figcaption>Automatic (Part B), 189 and 243 inliers per pair</figcaption></figure>
+</div>
+
+      <h4>Mosaic 3: Outside of the Simpson Centre</h4>
+      <div class="image-grid-2 zoom-grid">
+  <figure><img src="media/mosaic3.png" alt="Mosaic 3, manual"><figcaption>Manual (Part A), 8 clicks per pair</figcaption></figure>
+  <figure><img src="media/mosaic3_auto.png" alt="Mosaic 3, automatic"><figcaption>Automatic (Part B), 212 and 156 inliers per pair</figcaption></figure>
+</div>
+
+      <h4>Comparison</h4>
+      <p>
+        <span class="fill">Visual comparison: Visually, both the Manual and Automatic mosaics are indistinguishable. </span>
+        The biggest difference is the amount of evidence behind each homography. The manual mosaics use 8 correspondences per pair, each with a click error of a pixel or two (the mean
+        reprojection errors in A.2 are 0.63&ndash;1.91 px), and I deliberately chose them on distant, static structure. The automatic mosaics use 156&ndash;243 correspondences per pair, about 20 to 30 times as many,
+        spread over the whole overlap region and each localized to within the 3 px inlier threshold, and the least-squares fit averages the noise of all of them down.
+        The automatic method also needs no human time, whereas clicking 16 points per image pair is slow and has to be repeated for every new set of photos.
+        The trade-off is that the automatic correspondences are not hand-checked. They are only as good as the detector, the descriptor, and the inlier test, and
+        features on nearby objects that violate the single-plane model are simply discarded by RANSAC as outliers instead of being avoided by a human.
+      </p>
+    </section>
+
+    <hr>
+
+    <!------------------------------------ B.5 ------------------------------------>
+    <section class="part" id="b5">
+      <h2>B.5: Bells &amp; Whistles: Rotation Invariance</h2>
+      <p>
+        The base descriptor of B.2 samples its 8&times;8 grid along the image axes, so if the camera is rolled between two shots, the same scene point has a rotated patch and no longer matches.
+        Following the paper, I make the descriptor rotation invariant by sampling the grid along each corner's own dominant orientation:
+      </p>
+      <ol>
+        <li><strong>Orientation.</strong> The gradient of the image blurred at \(\sigma_o = 4.5\) px is evaluated at the corner, and \(\theta = \operatorname{atan2}(g_y, g_x)\). The heavy blur makes the
+          orientation stable under small localization errors.</li>
+        <li><strong>Rotated sampling.</strong> The 8&times;8 sample offsets \((u, v)\) (spacing 5 px, \(-17.5\) to \(+17.5\)) are rotated by \(\theta\):
+          $$ \begin{bmatrix} x \\ y \end{bmatrix} = \begin{bmatrix} x_0 \\ y_0 \end{bmatrix} + \begin{bmatrix} \cos\theta & -\sin\theta \\ \sin\theta & \cos\theta \end{bmatrix} \begin{bmatrix} u \\ v \end{bmatrix} $$
+          and the blurred image is read with bilinear interpolation, followed by the same bias/gain normalization.</li>
+        <li><strong>Border.</strong> The rotated window can reach farther from the corner, so with this option on, corners within 30 px of the border are discarded instead of 20 px.</li>
+      </ol>
+      <p>
+        The code is the <code>rotation_invariant=True</code> branch of <code>extract_descriptors</code> shown in B.2.
+      </p>
+
+      <h3>Test</h3>
+      <p>
+        To test it, I rotated image 1 of set 1 by 35&deg; and matched the original against the rotated copy with exactly the same detection, ratio test (0.7), and RANSAC as before.
+        The mosaics above use the plain axis-aligned descriptors, since the photos were taken without rolling the camera, so the orientation estimate would not add anything there.
+      </p>
+      <div class="scroll">
+      <table class="results-table">
+        <thead>
+          <tr><th>Descriptor</th><th>Ratio-test matches</th><th>RANSAC inliers</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Axis-aligned (B.2)</td><td>2</td><td>0 (fewer than the 4 matches needed to fit a homography)</td></tr>
+          <tr><td>Rotation-invariant</td><td>136</td><td>128 (94.1%)</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <div class="image-grid-1">
+  <figure><img src="media/rotation_invariance_matches.png" alt="Rotation-invariant matches between an image and a copy rotated by 35 degrees"><figcaption>Rotation-invariant descriptors: set 1, image 1 vs. a copy rotated by 35&deg;. Green: RANSAC inliers (205 of 208 matches).</figcaption></figure>
+</div>
+      <p>
+        With the axis-aligned descriptor, only one match survives the ratio test, so RANSAC cannot even be run. With the rotation-invariant descriptor, 208 matches survive and 205 of them
+        agree with a single homography, which shows that the orientation estimate rotates the sampling grid consistently with the image.
+      </p>
+    </section>
+
+    <hr>
+
+    <!------------------------------------ Summary ------------------------------------>
+    <section class="part" id="b-summary">
+      <h2>Summary of Part B</h2>
+      <p>
+        I detect Harris corners, spread 500 of them evenly over each image with ANMS, describe them with normalized 8&times;8 patches sampled from blurred 40&times;40 windows, match them with
+        the 1-NN/2-NN ratio test, and estimate each homography with my own 4-point RANSAC. This produced three automatic mosaics that I can compare directly with
+        the manual mosaics from Part A. The most useful lessons were that ANMS is a cheap way to avoid leaving regions of an image without features, that the ratio test removes most wrong matches without any
+        knowledge of the geometry, and that RANSAC takes care of the rest, so that 91&ndash;96% of the remaining matches were consistent with one homography. The
+        coolest part is that the whole thing runs without a single click, and that adding rotation invariance only required rotating the sampling grid.
+      </p>
+    </section>
+
   </div>
 </div>
 
